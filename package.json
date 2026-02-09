@@ -16,6 +16,7 @@
     "resizable": true
   },
   "chromium-args": "--enable-unsafe-webgpu --enable-features=PlatformHEVCDecoderSupport --disable-renderer-backgrounding",
+  "LSApplicationCategoryType": "public.app-category.graphics-design",
   "scripts": {
     "start": "electron .",
     "start:nw": "nw .",

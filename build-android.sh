@@ -130,7 +130,7 @@ cat > config.xml << 'EOF'
     <allow-navigation href="*" />
     <preference name="DisallowOverscroll" value="true" />
     <preference name="android-minSdkVersion" value="24" />
-    <preference name="android-targetSdkVersion" value="33" />
+    <preference name="android-targetSdkVersion" value="34" />
     <preference name="Fullscreen" value="false" />
     <preference name="Orientation" value="default" />
     <platform name="android">
