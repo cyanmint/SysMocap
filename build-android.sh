@@ -163,13 +163,13 @@ EOF
 
 # Build the APK
 echo "🔨 Building Android APK..."
-cordova build android --release --verbose
+cordova build android --verbose
 
 # Find and copy the APK
 echo "📦 Locating APK..."
 cd ../..
 mkdir -p android-build
-find mobile-build/sysmocap-android/platforms/android/app/build/outputs/apk -name "*.apk" -exec cp {} android-build/SysMocap-Android.apk \;
+find mobile-build/sysmocap-android/platforms/android/app/build/outputs/apk -name "*-debug.apk" -exec cp {} android-build/SysMocap-Android.apk \;
 
 # Get file size
 APK_SIZE=$(du -h android-build/SysMocap-Android.apk | cut -f1)

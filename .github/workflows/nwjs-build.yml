@@ -272,10 +272,16 @@ jobs:
       - name: Build Android APK
         run: |
           cd mobile-build/sysmocap-android
-          cordova build android --release --verbose
+          echo "Building Android APK (debug mode)..."
+          cordova build android --verbose || {
+            echo "Build failed. Checking for error logs..."
+            find platforms/android -name "*.log" -exec cat {} \;
+            exit 1
+          }
           
-          # Find the APK
-          find platforms/android/app/build/outputs/apk -name "*.apk"
+          # Find and list the APK
+          echo "Looking for built APK files..."
+          find platforms/android/app/build/outputs/apk -name "*.apk" -ls
 
       # step9: get version tag
       - name: Get version tag
@@ -290,11 +296,19 @@ jobs:
           echo "Version: $VERSION"
 
       # step10: rename APK
-      - name: Rename APK
+      - name: Rename and copy APK
         run: |
           mkdir -p android-build
-          find mobile-build/sysmocap-android/platforms/android/app/build/outputs/apk -name "*.apk" -exec cp {} android-build/SysMocap-Android-${{ steps.get_version.outputs.VERSION }}.apk \;
-          ls -la android-build/
+          # Find debug APK (since we're not signing for release)
+          APK_FILE=$(find mobile-build/sysmocap-android/platforms/android/app/build/outputs/apk -name "*-debug.apk" | head -1)
+          if [ -z "$APK_FILE" ]; then
+            echo "Error: No APK file found"
+            find mobile-build/sysmocap-android/platforms/android/app/build/outputs/apk -type f
+            exit 1
+          fi
+          cp "$APK_FILE" android-build/SysMocap-Android-${{ steps.get_version.outputs.VERSION }}.apk
+          echo "APK copied successfully"
+          ls -lh android-build/
 
       # step11: upload Android artifacts
       - name: Upload Android APK
