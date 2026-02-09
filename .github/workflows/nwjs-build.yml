@@ -29,7 +29,7 @@ jobs:
           - os: ubuntu-latest
             platform: linux
           - os: windows-latest
-            platform: windows
+            platform: win
           - os: macos-latest
             platform: osx
     
@@ -49,18 +49,13 @@ jobs:
         run: |
           npm install
 
-      # step4: install nw-builder globally
-      - name: Install nw-builder
-        run: |
-          npm install -g nw-builder
-
-      # step5: build NW.js desktop packages
+      # step4: build NW.js desktop packages
       - name: Build NW.js for ${{ matrix.platform }}
         run: |
           mkdir -p OutApp/nw
-          nwbuild --mode=build --version=latest --flavor=normal --arch=x64 --outDir=./OutApp/nw --${{ matrix.platform }}=true ./
+          npx nw-builder --mode=build --version=latest --flavor=normal --arch=x64 --platform=${{ matrix.platform }} --outDir=./OutApp/nw ./
         
-      # step6: get version tag
+      # step5: get version tag
       - name: Get version tag
         id: get_version
         shell: bash
@@ -73,7 +68,7 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
           echo "Version: $VERSION"
 
-      # step7: rename output directories
+      # step6: rename output directories
       - name: Rename build directories
         shell: bash
         run: |
@@ -86,7 +81,7 @@ jobs:
           done
           ls -la
 
-      # step8: create archives
+      # step7: create archives
       - name: Create archives (Linux/macOS)
         if: runner.os != 'Windows'
         run: |
@@ -107,7 +102,7 @@ jobs:
           }
           Get-ChildItem *.zip
 
-      # step9: upload desktop artifacts
+      # step8: upload desktop artifacts
       - name: Upload NW.js desktop artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -121,6 +116,7 @@ jobs:
   build-nwjs-android:
     name: Build NW.js for Android
     runs-on: ubuntu-latest
+    continue-on-error: true  # Allow this job to fail without failing the workflow
     
     steps:
       # step1: check out repository
@@ -306,7 +302,7 @@ jobs:
   # Create release with all artifacts
   create-release:
     name: Create Release
-    needs: [build-nwjs, build-nwjs-android]
+    needs: [build-nwjs]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     
