@@ -9,7 +9,15 @@
  */
 
 // Detect if running in browser mode
-const isBrowserMode = typeof window !== 'undefined' && (typeof process === 'undefined' || !process.versions || !process.versions.electron);
+const isNwjs = (function() {
+    try {
+        return typeof nw !== 'undefined' && nw.process;
+    } catch (e) {
+        return false;
+    }
+})();
+const isElectron = typeof process !== 'undefined' && process.versions && process.versions.electron && !isNwjs;
+const isBrowserMode = typeof window !== 'undefined' && !isNwjs && !isElectron;
 
 let globalSettings, ipcRenderer;
 
@@ -29,6 +37,22 @@ if (isBrowserMode) {
     }
     
     // Browser IPC shim
+    ipcRenderer = {
+        send: function(channel, ...args) {
+            window.dispatchEvent(new CustomEvent('ipc-' + channel, { detail: args }));
+        },
+        on: function(channel, callback) {
+            window.addEventListener('ipc-' + channel, (e) => {
+                callback(e, e.detail);
+            });
+        }
+    };
+} else if (isNwjs) {
+    // NW.js mode - import setting utils and use shim
+    const settingUtils = require("../utils/setting.js");
+    globalSettings = settingUtils.globalSettings;
+    
+    // NW.js IPC shim
     ipcRenderer = {
         send: function(channel, ...args) {
             window.dispatchEvent(new CustomEvent('ipc-' + channel, { detail: args }));

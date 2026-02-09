@@ -12,11 +12,127 @@ var ipcRenderer = null;
 var remote = null;
 var platform = typeof navigator !== 'undefined' ? (navigator.userAgent.includes('Android') ? 'android' : (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad') ? 'ios' : 'web')) : "web";
 
-// Browser compatibility shim
-const isBrowserMode = typeof window !== 'undefined' && (typeof process === 'undefined' || !process.versions || !process.versions.electron);
+// Runtime detection - check in safe order
+const isNwjs = (function() {
+    try {
+        return typeof nw !== 'undefined' && nw.process;
+    } catch (e) {
+        return false;
+    }
+})();
+const isElectron = typeof process !== 'undefined' && process.versions && process.versions.electron && !isNwjs;
+const isBrowserMode = typeof window !== 'undefined' && !isNwjs && !isElectron;
 
-// IPC shim for browser mode
-if (isBrowserMode) {
+console.log('[Runtime]', isNwjs ? 'NW.js' : isElectron ? 'Electron' : 'Browser');
+
+// NW.js shim
+if (isNwjs) {
+    // NW.js has direct access to Node.js APIs, but we create shims for compatibility
+    ipcRenderer = {
+        send: function(channel, ...args) {
+            // Use custom events for NW.js IPC
+            window.dispatchEvent(new CustomEvent('ipc-' + channel, { detail: args }));
+        },
+        on: function(channel, callback) {
+            window.addEventListener('ipc-' + channel, (e) => {
+                callback(e, e.detail);
+            });
+        }
+    };
+    
+    remote = {
+        getGlobal: function(name) {
+            if (typeof global !== 'undefined' && global[name]) {
+                return global[name];
+            }
+            if (name === 'appInfo') {
+                return global.appInfo || { appVersion: '0.7.3-nwjs', appName: 'SysMocap NW.js' };
+            }
+            if (name === 'storagePath') {
+                return global.storagePath || { jsonPath: 'sysmocap-nwjs' };
+            }
+            return {};
+        },
+        app: {
+            getGPUInfo: async function() {
+                // Try to get GPU info from WebGL
+                try {
+                    const canvas = document.createElement('canvas');
+                    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                    if (gl) {
+                        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+                        if (debugInfo) {
+                            return {
+                                gpuDevice: [{
+                                    description: gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL)
+                                }]
+                            };
+                        }
+                    }
+                } catch (e) {
+                    console.error('Failed to get GPU info:', e);
+                }
+                return { gpuDevice: [{ description: 'Unknown (NW.js Mode)' }] };
+            }
+        },
+        dialog: {
+            showOpenDialogSync: function(options) {
+                // NW.js has native file dialogs
+                try {
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    if (options && options.properties && options.properties.includes('openFile')) {
+                        input.multiple = false;
+                    }
+                    if (options && options.filters) {
+                        const extensions = options.filters.flatMap(f => f.extensions).map(e => '.' + e);
+                        input.accept = extensions.join(',');
+                    }
+                    // Return a promise-like structure
+                    return new Promise((resolve) => {
+                        input.onchange = (e) => {
+                            const files = Array.from(e.target.files);
+                            resolve(files.length > 0 ? files.map(f => f.path) : null);
+                        };
+                        input.click();
+                    });
+                } catch (e) {
+                    console.error('File dialog error:', e);
+                    return null;
+                }
+            }
+        },
+        getCurrentWindow: function() {
+            if (typeof nwWindow !== 'undefined') {
+                return nwWindow;
+            }
+            return {
+                isMaximized: () => false,
+                restore: () => {},
+                maximize: () => {},
+                close: () => window.close()
+            };
+        },
+        systemPreferences: {
+            getMediaAccessStatus: () => 'granted',
+            askForMediaAccess: async () => true
+        },
+        nativeTheme: {
+            themeSource: 'system'
+        },
+        shell: {
+            openExternal: (url) => {
+                if (typeof nw !== 'undefined' && nw.Shell) {
+                    nw.Shell.openExternal(url);
+                } else {
+                    window.open(url, '_blank');
+                }
+            }
+        }
+    };
+}
+// Browser mode shim
+else if (isBrowserMode) {
     ipcRenderer = {
         send: function(channel, ...args) {
             // Emit custom events for browser mode
@@ -238,14 +354,18 @@ function rgba2hex(rgba) {
 }
 
 if (typeof require != "undefined" && !isBrowserMode) {
-    // Electron mode - import electron remote
-    remote = require("@electron/remote");
-
-    ipcRenderer = require("electron").ipcRenderer;
-
-    const { shell } = require("electron");
-
-    platform = require("os").platform();
+    // Native mode (Electron or NW.js) - import platform-specific modules
+    if (isElectron) {
+        // Electron mode - import electron remote
+        remote = require("@electron/remote");
+        ipcRenderer = require("electron").ipcRenderer;
+        const { shell } = require("electron");
+    }
+    // For NW.js, remote and ipcRenderer are already shimmed above
+    
+    if (typeof process !== 'undefined') {
+        platform = require("os").platform();
+    }
 
     // import setting utils
     const {
@@ -796,10 +916,12 @@ if (typeof require != "undefined" && !isBrowserMode) {
         );
         
         var f = async () => {
-            var color = window.getComputedStyle(
-                document.querySelector(".mdui-color-theme"),
-                null
-            ).backgroundColor;
+            const themeElement = document.querySelector(".mdui-color-theme");
+            if (!themeElement) {
+                console.warn('.mdui-color-theme element not found, skipping theme initialization');
+                return;
+            }
+            var color = window.getComputedStyle(themeElement, null).backgroundColor;
             var hex = rgba2hex(color);
             var theme = await themeFromSourceColor(argbFromHex(hex));
             applyTheme(theme, { target: document.body, dark: darkMode });
@@ -831,7 +953,13 @@ if (typeof require != "undefined" && !isBrowserMode) {
                 document: document,
                 camera: "",
                 cameras: [],
-                process: { platform: platform },
+                process: { 
+                    platform: platform,
+                    versions: {
+                        electron: 'N/A (Browser)',
+                        node: 'N/A (Browser)'
+                    }
+                },
                 checkingUpdate: false,
                 hasUpdate: null,
                 updateError: null,
@@ -915,20 +1043,23 @@ if (typeof require != "undefined" && !isBrowserMode) {
         });
         
         // Browser file chooser
-        document.getElementById("chooseFile").onclick = function () {
-            // In browser mode, we'll use HTML5 file input
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = 'video/mp4,video/webm';
-            input.onchange = (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    const url = URL.createObjectURL(file);
-                    app.videoPath = url;
-                }
+        const chooseFileBtn = document.getElementById("chooseFile");
+        if (chooseFileBtn) {
+            chooseFileBtn.onclick = function () {
+                // In browser mode, we'll use HTML5 file input
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = 'video/mp4,video/webm';
+                input.onchange = (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const url = URL.createObjectURL(file);
+                        app.videoPath = url;
+                    }
+                };
+                input.click();
             };
-            input.click();
-        };
+        }
         
         // Get cameras
         navigator.mediaDevices.enumerateDevices().then((devices) => {

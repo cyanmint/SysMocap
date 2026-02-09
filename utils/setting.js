@@ -11,7 +11,15 @@
  */
 
 // Detect if running in browser mode
-const isBrowser = typeof window !== 'undefined' && (typeof process === 'undefined' || !process.versions || !process.versions.electron);
+const isNwjs = (function() {
+    try {
+        return typeof nw !== 'undefined' && nw.process;
+    } catch (e) {
+        return false;
+    }
+})();
+const isElectron = typeof process !== 'undefined' && process.versions && process.versions.electron && !isNwjs;
+const isBrowser = typeof window !== 'undefined' && !isNwjs && !isElectron;
 
 let storage, remote;
 
@@ -32,6 +40,48 @@ if (isBrowser) {
             } catch (e) {
                 console.error('Failed to save to localStorage:', e);
             }
+        }
+    };
+} else if (isNwjs) {
+    // NW.js mode - use localStorage-like interface
+    storage = {
+        getItem: function(key) {
+            try {
+                const fs = require('fs');
+                const path = require('path');
+                const storagePath = global.storagePath ? global.storagePath.jsonPath : path.join(require('os').homedir(), 'SysMocap', 'profile.json');
+                if (fs.existsSync(storagePath)) {
+                    const data = JSON.parse(fs.readFileSync(storagePath, 'utf8'));
+                    return data[key] || null;
+                }
+                return null;
+            } catch (e) {
+                console.error('Failed to read from file storage:', e);
+                return null;
+            }
+        },
+        setItem: function(key, value) {
+            try {
+                const fs = require('fs');
+                const path = require('path');
+                const storagePath = global.storagePath ? global.storagePath.jsonPath : path.join(require('os').homedir(), 'SysMocap', 'profile.json');
+                let data = {};
+                if (fs.existsSync(storagePath)) {
+                    data = JSON.parse(fs.readFileSync(storagePath, 'utf8'));
+                }
+                data[key] = value;
+                const dir = path.dirname(storagePath);
+                if (!fs.existsSync(dir)) {
+                    fs.mkdirSync(dir, { recursive: true });
+                }
+                fs.writeFileSync(storagePath, JSON.stringify(data, null, 2), 'utf8');
+            } catch (e) {
+                console.error('Failed to save to file storage:', e);
+            }
+        },
+        getStoragePath: function() {
+            const path = require('path');
+            return global.storagePath ? global.storagePath.jsonPath : path.join(require('os').homedir(), 'SysMocap', 'profile.json');
         }
     };
 } else {
