@@ -466,6 +466,32 @@ if (typeof require != "undefined" && !isBrowserMode) {
             }
 
         },
+        methods: {
+            openModelViewer(model, event) {
+                if (!isBrowserMode) {
+                    // Electron mode - use IPC
+                    const target = event.currentTarget;
+                    const backgroundColor = target.style.getPropertyValue('--md-sys-color-primary-container') || 
+                                          document.body.style.getPropertyValue('--md-sys-color-primary-container');
+                    const color = target.style.getPropertyValue('--md-sys-color-primary') || 
+                                 document.body.style.getPropertyValue('--md-sys-color-primary');
+                    const textColor = target.style.getPropertyValue('--md-sys-color-on-primary-container') || 
+                                     document.body.style.getPropertyValue('--md-sys-color-on-primary-container');
+                    
+                    ipcRenderer.send('openModelViewer', {
+                        model: model,
+                        backgroundColor: backgroundColor,
+                        color: color,
+                        textColor: textColor,
+                        useGlass: this.settings.ui.useGlass
+                    });
+                } else {
+                    // Browser mode - just select the model (can't open external window)
+                    console.log('Model viewer not available in browser mode, selecting model:', model.name);
+                    this.selectModel = JSON.stringify(model);
+                }
+            }
+        },
         watch: {
             settings: {
                 handler(newVal, oldVal) {
@@ -1032,6 +1058,11 @@ if (typeof require != "undefined" && !isBrowserMode) {
                 saveSettings: saveSettings,
                 addUserModels: addUserModels,
                 removeUserModels: removeUserModels,
+                openModelViewer(model, event) {
+                    // Browser mode - just select the model (can't open external window)
+                    console.log('Model viewer not available in browser mode, selecting model:', model.name);
+                    this.selectModel = JSON.stringify(model);
+                }
             },
         });
         
@@ -1110,7 +1141,7 @@ if (ipcRenderer && !isBrowserMode) {
 
 window.startMocap = async function (e) {
     // Check camera permissions (Electron only)
-    if (!isBrowserMode && process.platform == "darwin" && app.videoSource == "camera")
+    if (!isBrowserMode && process.platform == "darwin" && window.sysmocapApp.videoSource == "camera")
         if (
             remote.systemPreferences.getMediaAccessStatus("camera") !==
             "granted"
@@ -1120,12 +1151,12 @@ window.startMocap = async function (e) {
                 return;
             }
         }
-    if (e.innerHTML.indexOf(app.language.tabMocap.start) != -1) {
+    if (e.innerHTML.indexOf(window.sysmocapApp.language.tabMocap.start) != -1) {
         isMocaping = true;
-        localStorage.setItem("modelInfo", app.selectModel);
-        localStorage.setItem("useCamera", app.videoSource);
-        localStorage.setItem("cameraId", app.camera);
-        localStorage.setItem("videoFile", app.videoPath[0]);
+        localStorage.setItem("modelInfo", window.sysmocapApp.selectModel);
+        localStorage.setItem("useCamera", window.sysmocapApp.videoSource);
+        localStorage.setItem("cameraId", window.sysmocapApp.camera);
+        localStorage.setItem("videoFile", window.sysmocapApp.videoPath[0]);
 
         if (!isBrowserMode && window.sysmocapApp.settings.performance.useDescrertionProcess) {
             const win = remote.getCurrentWindow();
@@ -1149,7 +1180,7 @@ window.startMocap = async function (e) {
 
         e.innerHTML =
             '<i class="mdui-icon material-icons">stop</i>' +
-            app.language.tabMocap.stop;
+            window.sysmocapApp.language.tabMocap.stop;
     } else {
         isMocaping = false;
         if (!isBrowserMode && window.sysmocapApp.settings.performance.useDescrertionProcess) {
@@ -1165,7 +1196,7 @@ window.startMocap = async function (e) {
 
         e.innerHTML =
             '<i class="mdui-icon material-icons">play_arrow</i>' +
-            app.language.tabMocap.start;
+            window.sysmocapApp.language.tabMocap.start;
     }
 };
 
