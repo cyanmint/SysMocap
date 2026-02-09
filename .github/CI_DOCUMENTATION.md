@@ -1,6 +1,6 @@
 # CI/CD Workflows Documentation
 
-This document explains the GitHub Actions workflows for building and releasing SysMocap.
+This document explains the GitHub Actions workflows for building and releasing SysMocap across all platforms and runtime modes.
 
 ## Workflows Overview
 
@@ -9,28 +9,15 @@ This document explains the GitHub Actions workflows for building and releasing S
 **Trigger:** When a version tag is pushed (e.g., `v1.0.0`)
 
 **Builds:**
-- Windows x64 (portable + installer)
-- Windows ARM64 (portable + installer)
-- macOS x64 (DMG)
-- macOS ARM64 (DMG)
+- Windows x64 (portable + installer) - **Electron**
+- Windows ARM64 (portable + installer) - **Electron**
+- macOS x64 (DMG) - **Electron**
+- macOS ARM64 (DMG) - **Electron**
 
 **Outputs:**
 - 7z archives (Windows portable)
 - MSI installers (Windows)
 - DMG images (macOS)
-
-**Workflow:**
-```
-Tag pushed (v*.*.*)
-  ↓
-Build on Windows + macOS runners
-  ↓
-Package applications
-  ↓
-Upload artifacts
-  ↓
-Create GitHub Release
-```
 
 ### 2. Web Build Workflow (`web-build.yml`)
 
@@ -41,28 +28,35 @@ Create GitHub Release
 - Manual workflow dispatch → Builds only, no release
 
 **Builds:**
-- Browser/Web version (tar.gz + zip)
+- Browser/Web version (tar.gz + zip) - **Browser Mode**
 
 **Outputs:**
 - `SysMocap-Web-Build.tar.gz` - Compressed web build
 - `SysMocap-Web-Build.zip` - Zip archive web build
-- Artifacts uploaded to GitHub Actions
-- GitHub Pages deployment (main branch only)
 
-**Workflow:**
-```
-Trigger event
-  ↓
-Build web version
-  ↓
-Create archives
-  ↓
-Upload artifacts (always)
-  ↓
-Create release? (only if version tag)
-  ↓
-Deploy to GitHub Pages? (only if main branch)
-```
+### 3. NW.js Build Workflow (`nwjs-build.yml`) - NEW
+
+**Triggers:**
+- Version tag pushed (e.g., `v1.0.0`) → Creates release
+- Push to main branch → Builds only, no release
+- Pull request → Builds only, no release
+- Manual workflow dispatch → Builds only, no release
+
+**Builds:**
+- NW.js Desktop (Windows, macOS, Linux) - **NW.js Mode**
+- Android APK via Cordova - **Mobile**
+
+**Outputs:**
+- Desktop: tar.gz/zip for each platform
+- Mobile: `SysMocap-Android-*.apk`
+
+**Build Matrix:**
+| Platform | Runner | Output Format |
+|----------|--------|---------------|
+| Windows | windows-latest | .zip |
+| macOS | macos-latest | .tar.gz |
+| Linux | ubuntu-latest | .tar.gz |
+| Android | ubuntu-latest | .apk |
 
 ## Release Creation Rules
 
@@ -77,19 +71,20 @@ Deploy to GitHub Pages? (only if main branch)
 
 ## Triggering Builds
 
-### Creating a Release (Desktop + Web)
+### Creating a Release (All Platforms)
 
 ```bash
 # Create and push a version tag
 git tag v1.0.0
 git push origin v1.0.0
 
-# This triggers BOTH workflows:
-# - main.yml: Builds desktop versions
-# - web-build.yml: Builds web version and creates release
+# This triggers ALL workflows:
+# - main.yml: Builds Electron desktop versions
+# - web-build.yml: Builds browser version
+# - nwjs-build.yml: Builds NW.js desktop + Android
 ```
 
-### Testing Web Build (No Release)
+### Testing Builds (No Release)
 
 ```bash
 # Push to main branch
@@ -99,11 +94,53 @@ git push origin main
 # Both will build but NOT create a release
 ```
 
-### Manual Web Build
+### Manual Builds
 
 ```bash
 # Go to GitHub Actions tab
-# Select "Build SysMocap Web Version" workflow
+# Select desired workflow
+# Click "Run workflow"
+# Select branch and run
+```
+
+## Build Outputs by Mode
+
+### Electron (Desktop Only)
+```
+Release Assets:
+├── SysMocap-Windows-x64-v1.0.0.7z
+├── SysMocap-Windows-x64-installer-v1.0.0.msi
+├── SysMocap-Windows-arm64-v1.0.0.7z
+├── SysMocap-Windows-arm64-installer-v1.0.0.msi
+├── SysMocap-macOS-x64-v1.0.0.dmg
+└── SysMocap-macOS-arm64-v1.0.0.dmg
+```
+
+### Browser (Web - Desktop & Mobile)
+```
+Release Assets:
+├── SysMocap-Web-Build.tar.gz
+└── SysMocap-Web-Build.zip
+
+Artifacts:
+├── SysMocap-Web-Directory-v1.0.0/
+└── SysMocap-Web-Archives-v1.0.0/
+```
+
+### NW.js (Desktop & Mobile)
+```
+Release Assets:
+├── SysMocap-NWjs-v1.0.0-linux-x64.tar.gz
+├── SysMocap-NWjs-v1.0.0-windows-x64.zip
+├── SysMocap-NWjs-v1.0.0-osx-x64.tar.gz
+└── SysMocap-Android-v1.0.0.apk
+
+Artifacts:
+├── SysMocap-NWjs-linux-v1.0.0/
+├── SysMocap-NWjs-windows-v1.0.0/
+├── SysMocap-NWjs-osx-v1.0.0/
+└── SysMocap-Android-v1.0.0/
+```
 # Click "Run workflow"
 # Select branch and run
 ```
