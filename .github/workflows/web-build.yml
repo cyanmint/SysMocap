@@ -338,17 +338,64 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
           echo "Version: $VERSION"
 
-      # step7: upload artifacts
-      - name: Upload web build artifacts
+      # step7: create build summary
+      - name: Create build summary
+        run: |
+          echo "## 🎉 Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Build Information" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: ${{ steps.get_version.outputs.VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Trigger**: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch/Tag**: ${{ github.ref }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📦 Artifacts Created" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Artifact | Size | Type |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|------|------|" >> $GITHUB_STEP_SUMMARY
+          echo "| web-build/ | $(du -sh web-build | cut -f1) | Directory |" >> $GITHUB_STEP_SUMMARY
+          echo "| SysMocap-Web-Build.tar.gz | $(du -sh SysMocap-Web-Build.tar.gz | cut -f1) | Archive |" >> $GITHUB_STEP_SUMMARY
+          echo "| SysMocap-Web-Build.zip | $(du -sh SysMocap-Web-Build.zip | cut -f1) | Archive |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📥 Download Options" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**From GitHub Actions Artifacts:**" >> $GITHUB_STEP_SUMMARY
+          echo "- \`SysMocap-Web-Directory-${{ steps.get_version.outputs.VERSION }}\` - Uncompressed files" >> $GITHUB_STEP_SUMMARY
+          echo "- \`SysMocap-Web-Archives-${{ steps.get_version.outputs.VERSION }}\` - Compressed archives" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            echo "**From Release:**" >> $GITHUB_STEP_SUMMARY
+            echo "- Release will be created with tar.gz and zip files" >> $GITHUB_STEP_SUMMARY
+            echo "- Visit the [Releases page](../../releases) after workflow completes" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "**Note:** Release creation skipped (not a version tag)" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "1. Download artifacts from the Actions tab above" >> $GITHUB_STEP_SUMMARY
+          echo "2. Extract and deploy to your web server" >> $GITHUB_STEP_SUMMARY
+          echo "3. Enable HTTPS for camera access" >> $GITHUB_STEP_SUMMARY
+          echo "4. See \`DEPLOYMENT.md\` in the build for details" >> $GITHUB_STEP_SUMMARY
+
+      # step8: upload artifacts (multiple types)
+      - name: Upload web build directory
         uses: actions/upload-artifact@v4
         with:
-          name: SysMocap-Web-${{ steps.get_version.outputs.VERSION }}
+          name: SysMocap-Web-Directory-${{ steps.get_version.outputs.VERSION }}
+          path: web-build/
+          retention-days: 90
+          
+      - name: Upload compressed archives
+        uses: actions/upload-artifact@v4
+        with:
+          name: SysMocap-Web-Archives-${{ steps.get_version.outputs.VERSION }}
           path: |
             SysMocap-Web-Build.tar.gz
             SysMocap-Web-Build.zip
           retention-days: 90
 
-      # step8: create release (only on version tags matching v*.*.*)
+      # step9: create release (only on version tags matching v*.*.*)
       - name: Create Release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
@@ -364,6 +411,11 @@ jobs:
             ### Downloads
             - `SysMocap-Web-Build.tar.gz` - Web build (gzip compressed)
             - `SysMocap-Web-Build.zip` - Web build (zip archive)
+            
+            ### Additional Downloads
+            For development or testing, you can also download:
+            - Uncompressed files from [GitHub Actions Artifacts](../../actions)
+            - Look for artifacts: `SysMocap-Web-Directory-*` and `SysMocap-Web-Archives-*`
             
             ### Deployment
             1. Extract the archive
@@ -381,7 +433,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # step9: deploy to GitHub Pages (only on main branch push, skip on tags)
+      # step10: deploy to GitHub Pages (only on main branch push, skip on tags)
       - name: Deploy to GitHub Pages
         if: github.ref == 'refs/heads/main' && github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/')
         uses: peaceiris/actions-gh-pages@v3

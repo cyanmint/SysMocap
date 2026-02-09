@@ -117,9 +117,33 @@ All workflows upload artifacts that can be downloaded from the Actions tab:
 - `macos-13` - macOS builds
 
 ### Web Build Artifacts
-- `SysMocap-Web-<version>` - Contains both tar.gz and zip
+The web build workflow uploads **two types** of artifacts:
+
+1. **SysMocap-Web-Directory-\<version\>**
+   - Uncompressed web-build directory
+   - All files ready to use
+   - Easy to browse and inspect
+   - Best for: Quick testing, development
+
+2. **SysMocap-Web-Archives-\<version\>**
+   - Contains both tar.gz and zip files
+   - Compressed for distribution
+   - Best for: Downloads, deployment, sharing
 
 **Retention:** 90 days
+
+### Downloading Artifacts
+
+**From GitHub Actions:**
+1. Go to repository → Actions tab
+2. Click on a workflow run
+3. Scroll to "Artifacts" section
+4. Download desired artifact
+
+**From Releases:**
+- Only available when version tag is pushed
+- Contains compressed archives only
+- Permanent storage (not deleted after 90 days)
 
 ## Environment Variables
 
