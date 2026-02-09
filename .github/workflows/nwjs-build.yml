@@ -51,9 +51,28 @@ jobs:
 
       # step4: build NW.js desktop packages
       - name: Build NW.js for ${{ matrix.platform }}
+        shell: bash
         run: |
-          mkdir -p OutApp/nw
-          npx nw-builder --mode=build --version=latest --flavor=normal --arch=x64 --platform=${{ matrix.platform }} --outDir=./OutApp/nw ./
+          mkdir -p ../OutApp/nw
+          # Build with package.json as source (creates base package)
+          npx nw-builder --mode=build --version=latest --flavor=normal --arch=x64 --platform=${{ matrix.platform }} --outDir=../OutApp/nw package.json
+          # Copy all necessary files into the package
+          cp -r node_modules ../OutApp/nw/package.nw/
+          cp -r mainview ../OutApp/nw/package.nw/
+          cp -r mocap ../OutApp/nw/package.nw/
+          cp -r mocaprender ../OutApp/nw/package.nw/
+          cp -r render ../OutApp/nw/package.nw/
+          cp -r modelview ../OutApp/nw/package.nw/
+          cp -r utils ../OutApp/nw/package.nw/
+          cp -r models ../OutApp/nw/package.nw/
+          cp -r fonts ../OutApp/nw/package.nw/
+          cp -r icons ../OutApp/nw/package.nw/
+          cp -r pdfs ../OutApp/nw/package.nw/
+          cp -r pdfviewer ../OutApp/nw/package.nw/
+          cp -r webserv ../OutApp/nw/package.nw/ || true
+          cp -r browser ../OutApp/nw/package.nw/ || true
+          cp *.js ../OutApp/nw/package.nw/ || true
+          cp *.html ../OutApp/nw/package.nw/ || true
         
       # step5: get version tag
       - name: Get version tag
@@ -72,7 +91,7 @@ jobs:
       - name: Rename build directories
         shell: bash
         run: |
-          cd OutApp/nw
+          cd ../OutApp/nw
           for dir in */; do
             if [ -d "$dir" ]; then
               newname=$(echo "$dir" | sed "s/SysMocap/SysMocap-NWjs-${{ steps.get_version.outputs.VERSION }}/")
@@ -85,7 +104,7 @@ jobs:
       - name: Create archives (Linux/macOS)
         if: runner.os != 'Windows'
         run: |
-          cd OutApp/nw
+          cd ../OutApp/nw
           for dir in */; do
             if [ -d "$dir" ]; then
               tar -czf "${dir%/}.tar.gz" "$dir"
@@ -96,7 +115,7 @@ jobs:
       - name: Create archives (Windows)
         if: runner.os == 'Windows'
         run: |
-          cd OutApp/nw
+          cd ../OutApp/nw
           Get-ChildItem -Directory | ForEach-Object {
             Compress-Archive -Path $_.FullName -DestinationPath "$($_.Name).zip"
           }
@@ -108,8 +127,8 @@ jobs:
         with:
           name: SysMocap-NWjs-${{ matrix.platform }}-${{ steps.get_version.outputs.VERSION }}
           path: |
-            OutApp/nw/*.tar.gz
-            OutApp/nw/*.zip
+            ../OutApp/nw/*.tar.gz
+            ../OutApp/nw/*.zip
           retention-days: 90
 
   # Build NW.js for Android
