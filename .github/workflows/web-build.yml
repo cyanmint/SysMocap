@@ -1,0 +1,392 @@
+# web-build.yml
+
+# Workflow's name
+name: Build SysMocap Web Version
+
+# Workflow's trigger
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+# Workflow's jobs
+jobs:
+  # Build web version
+  build-web:
+    name: Build Web Version
+    runs-on: ubuntu-latest
+    
+    steps:
+      # step1: check out repository
+      - name: Check out git repository
+        uses: actions/checkout@v4
+
+      # step2: install node env
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # step3: npm install
+      - name: Install dependencies
+        run: |
+          npm install
+
+      # step4: create web build directory
+      - name: Create web build
+        run: |
+          mkdir -p web-build
+          
+          # Copy necessary files
+          cp -r mainview web-build/
+          cp -r mocap web-build/
+          cp -r mocaprender web-build/
+          cp -r render web-build/
+          cp -r modelview web-build/
+          cp -r pdfviewer web-build/
+          cp -r utils web-build/
+          cp -r models web-build/
+          cp -r fonts web-build/
+          cp -r icons web-build/
+          cp -r pdfs web-build/
+          cp -r webserv web-build/
+          cp -r browser web-build/
+          
+          # Copy node_modules (only production dependencies)
+          mkdir -p web-build/node_modules
+          cp -r node_modules/@mediapipe web-build/node_modules/
+          cp -r node_modules/@pixiv web-build/node_modules/
+          cp -r node_modules/@material web-build/node_modules/
+          cp -r node_modules/three web-build/node_modules/
+          cp -r node_modules/kalidokit web-build/node_modules/
+          cp -r node_modules/mdui web-build/node_modules/
+          cp -r node_modules/vue web-build/node_modules/
+          cp -r node_modules/lil-gui web-build/node_modules/
+          cp -r node_modules/socket.io web-build/node_modules/
+          
+          # Copy documentation
+          cp README.md web-build/
+          cp LICENSE web-build/
+          cp BROWSER_MIGRATION.md web-build/
+          cp BROWSER_DEV_GUIDE.md web-build/
+          cp IMPLEMENTATION_SUMMARY.md web-build/
+          
+          # Create index.html at root
+          cat > web-build/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+              <meta name="apple-mobile-web-app-capable" content="yes">
+              <meta name="mobile-web-app-capable" content="yes">
+              <title>SysMocap - Browser Edition</title>
+              <script>
+                  // Redirect to main application
+                  window.location.href = 'mainview/framework.html';
+              </script>
+          </head>
+          <body>
+              <p>Loading SysMocap Browser Edition...</p>
+              <p>If not redirected, <a href="mainview/framework.html">click here</a>.</p>
+          </body>
+          </html>
+          EOF
+          
+          # Create .htaccess for Apache servers
+          cat > web-build/.htaccess << 'EOF'
+          # Enable CORS for all files
+          <IfModule mod_headers.c>
+              Header set Access-Control-Allow-Origin "*"
+              Header set Access-Control-Allow-Methods "GET, POST, OPTIONS"
+              Header set Access-Control-Allow-Headers "Content-Type"
+          </IfModule>
+          
+          # Enable gzip compression
+          <IfModule mod_deflate.c>
+              AddOutputFilterByType DEFLATE text/html text/css text/javascript application/javascript application/json
+              AddOutputFilterByType DEFLATE application/wasm
+          </IfModule>
+          
+          # Cache static assets
+          <IfModule mod_expires.c>
+              ExpiresActive On
+              ExpiresByType image/png "access plus 1 month"
+              ExpiresByType image/jpeg "access plus 1 month"
+              ExpiresByType text/css "access plus 1 week"
+              ExpiresByType application/javascript "access plus 1 week"
+              ExpiresByType application/wasm "access plus 1 month"
+          </IfModule>
+          
+          # MIME types
+          AddType application/javascript .js
+          AddType text/css .css
+          AddType application/wasm .wasm
+          EOF
+          
+          # Create nginx.conf example
+          cat > web-build/nginx.conf.example << 'EOF'
+          server {
+              listen 80;
+              server_name sysmocap.example.com;
+              
+              # Redirect to HTTPS
+              return 301 https://$server_name$request_uri;
+          }
+          
+          server {
+              listen 443 ssl http2;
+              server_name sysmocap.example.com;
+              
+              # SSL configuration
+              ssl_certificate /path/to/cert.pem;
+              ssl_certificate_key /path/to/key.pem;
+              
+              # Root directory
+              root /var/www/sysmocap;
+              index index.html;
+              
+              # Enable gzip
+              gzip on;
+              gzip_vary on;
+              gzip_min_length 1024;
+              gzip_types text/plain text/css text/javascript application/javascript application/json application/wasm;
+              
+              # Security headers
+              add_header X-Frame-Options "SAMEORIGIN" always;
+              add_header X-Content-Type-Options "nosniff" always;
+              add_header X-XSS-Protection "1; mode=block" always;
+              
+              # CORS headers
+              add_header Access-Control-Allow-Origin "*" always;
+              add_header Access-Control-Allow-Methods "GET, POST, OPTIONS" always;
+              add_header Access-Control-Allow-Headers "Content-Type" always;
+              
+              location / {
+                  try_files $uri $uri/ =404;
+              }
+              
+              location /node_modules {
+                  alias /var/www/sysmocap/node_modules;
+                  expires 1M;
+                  add_header Cache-Control "public, immutable";
+              }
+              
+              # Cache static assets
+              location ~* \.(jpg|jpeg|png|gif|ico|css|js|wasm)$ {
+                  expires 1M;
+                  add_header Cache-Control "public, immutable";
+              }
+          }
+          EOF
+          
+          # Create deployment guide
+          cat > web-build/DEPLOYMENT.md << 'EOF'
+          # SysMocap Web Version Deployment Guide
+          
+          ## Quick Start
+          
+          The `web-build` directory contains everything needed to deploy SysMocap to a web server.
+          
+          ## Requirements
+          
+          - Web server (Apache, Nginx, or any static file server)
+          - HTTPS certificate (required for camera access)
+          - Modern browser support (Chrome 90+, Firefox 88+, Safari 14+)
+          
+          ## Deployment Methods
+          
+          ### Method 1: Static File Server
+          
+          Simply upload the contents of this directory to your web server:
+          
+          ```bash
+          # Upload to server
+          rsync -avz web-build/ user@server:/var/www/sysmocap/
+          ```
+          
+          ### Method 2: Nginx
+          
+          1. Copy files to server:
+          ```bash
+          sudo cp -r web-build/* /var/www/sysmocap/
+          ```
+          
+          2. Use the provided nginx.conf.example as a template:
+          ```bash
+          sudo cp nginx.conf.example /etc/nginx/sites-available/sysmocap
+          sudo ln -s /etc/nginx/sites-available/sysmocap /etc/nginx/sites-enabled/
+          sudo nginx -t
+          sudo systemctl reload nginx
+          ```
+          
+          ### Method 3: Apache
+          
+          1. Copy files to server:
+          ```bash
+          sudo cp -r web-build/* /var/www/html/sysmocap/
+          ```
+          
+          2. The .htaccess file is already configured.
+          
+          3. Enable required modules:
+          ```bash
+          sudo a2enmod headers deflate expires
+          sudo systemctl reload apache2
+          ```
+          
+          ### Method 4: GitHub Pages
+          
+          1. Push the web-build directory to a gh-pages branch
+          2. Enable GitHub Pages in repository settings
+          3. Access via https://username.github.io/repository-name/
+          
+          Note: Camera access may be limited on GitHub Pages.
+          
+          ### Method 5: Netlify/Vercel
+          
+          1. Create a new site
+          2. Upload the web-build directory
+          3. Configure custom domain with HTTPS
+          
+          ## Testing Locally
+          
+          Use any simple HTTP server:
+          
+          ```bash
+          # Python
+          python3 -m http.server 8000
+          
+          # Node.js
+          npx http-server -p 8000
+          
+          # PHP
+          php -S localhost:8000
+          ```
+          
+          Then open http://localhost:8000
+          
+          ## HTTPS Configuration
+          
+          HTTPS is **required** for camera access in production. Options:
+          
+          1. **Let's Encrypt** (Free):
+          ```bash
+          sudo certbot --nginx -d sysmocap.example.com
+          ```
+          
+          2. **Cloudflare** (Free): Use Cloudflare's free SSL
+          
+          3. **Self-signed** (Development only):
+          ```bash
+          openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes
+          ```
+          
+          ## Troubleshooting
+          
+          ### Camera Not Working
+          - Ensure HTTPS is enabled
+          - Check browser permissions
+          - Verify CORS headers
+          
+          ### Files Not Loading
+          - Check file permissions
+          - Verify MIME types
+          - Check browser console for errors
+          
+          ### Performance Issues
+          - Enable gzip compression
+          - Add cache headers
+          - Use CDN for node_modules
+          
+          ## Support
+          
+          See:
+          - README.md - Main documentation
+          - BROWSER_MIGRATION.md - Technical details
+          - BROWSER_DEV_GUIDE.md - Developer guide
+          EOF
+          
+          # Create version file
+          echo "Version: $(git describe --tags 2>/dev/null || echo 'dev')" > web-build/VERSION.txt
+          echo "Build Date: $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> web-build/VERSION.txt
+          echo "Commit: $(git rev-parse HEAD)" >> web-build/VERSION.txt
+
+      # step5: create archive
+      - name: Create web build archive
+        run: |
+          cd web-build
+          tar -czf ../SysMocap-Web-Build.tar.gz .
+          cd ..
+          zip -r SysMocap-Web-Build.zip web-build/
+
+      # step6: get version tag
+      - name: Get version tag
+        id: get_version
+        run: |
+          if [[ $GITHUB_REF == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/}
+          else
+            VERSION="dev-$(git rev-parse --short HEAD)"
+          fi
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+
+      # step7: upload artifacts
+      - name: Upload web build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: SysMocap-Web-${{ steps.get_version.outputs.VERSION }}
+          path: |
+            SysMocap-Web-Build.tar.gz
+            SysMocap-Web-Build.zip
+          retention-days: 90
+
+      # step8: create release (only on version tags matching v*.*.*)
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            SysMocap-Web-Build.tar.gz
+            SysMocap-Web-Build.zip
+          body: |
+            ## SysMocap Web Version ${{ steps.get_version.outputs.VERSION }}
+            
+            This is the browser/web version of SysMocap that can be deployed to any web server.
+            
+            ### Downloads
+            - `SysMocap-Web-Build.tar.gz` - Web build (gzip compressed)
+            - `SysMocap-Web-Build.zip` - Web build (zip archive)
+            
+            ### Deployment
+            1. Extract the archive
+            2. Upload to your web server
+            3. Ensure HTTPS is enabled (required for camera access)
+            4. Access via browser
+            
+            ### Features
+            - ✅ Works on Android devices
+            - ✅ Full motion capture capabilities
+            - ✅ No installation required
+            - ✅ Cross-platform browser support
+            
+            See `DEPLOYMENT.md` in the archive for detailed deployment instructions.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # step9: deploy to GitHub Pages (only on main branch push, skip on tags)
+      - name: Deploy to GitHub Pages
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/')
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./web-build
+          publish_branch: gh-pages
+          cname: # Add custom domain if needed

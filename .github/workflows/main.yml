@@ -1,7 +1,7 @@
 # main.yml
 
 # Workflow's name
-name: Build SysMocap For Win/Mac
+name: Build SysMocap Desktop (Win/Mac)
 
 # Workflow's trigger
 on:
