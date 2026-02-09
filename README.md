@@ -135,7 +135,9 @@ https://user-images.githubusercontent.com/8101613/167257906-596919a5-4c0e-4795-8
 
 ### How to run from source code (need lastest Node.js):
 
-**Desktop Version (Electron):**
+SysMocap now supports **three runtime modes**. See [RUNTIME_MODES.md](RUNTIME_MODES.md) for detailed comparison.
+
+**Desktop Version (Electron - Desktop Only):**
 
 ```shell
 git clone https://github.com/xianfei/SysMocap.git
@@ -144,7 +146,16 @@ npm i
 npm start
 ```
 
-**Browser Version (for Android and Web):**
+**Desktop/Mobile Version (NW.js - Desktop & Mobile Potential):**
+
+```shell
+git clone https://github.com/xianfei/SysMocap.git
+cd SysMocap
+npm i
+npm run start:nw
+```
+
+**Browser Version (Web - Desktop & Mobile):**
 
 ```shell
 git clone https://github.com/xianfei/SysMocap.git
@@ -157,15 +168,19 @@ Then open your browser and navigate to:
 - Desktop/Laptop: `http://localhost:3000/mainview/framework.html`
 - Android/Mobile: `http://your-server-ip:3000/mainview/framework.html`
 
-**Browser Version Features:**
-- ✅ Works on Android devices and modern web browsers
-- ✅ Full motion capture capabilities using MediaPipe
-- ✅ Camera access via browser APIs
-- ✅ Touch-friendly interface
-- ⚠️ Requires HTTPS for camera access in production
-- ⚠️ Some desktop-specific features unavailable
+**Runtime Mode Comparison:**
 
-See [browser/README.md](browser/README.md) for more details about the browser version.
+| Feature | Electron | NW.js | Browser |
+|---------|----------|-------|---------|
+| Platform | Desktop only | Desktop + Mobile* | Desktop + Mobile |
+| Installation | Required | Required | None |
+| Native APIs | Full | Full | Limited |
+| Mobile Support | ❌ | ✅* | ✅ |
+| Package Size | ~150MB | ~120MB | ~15MB |
+
+*NW.js mobile requires additional packaging
+
+See [RUNTIME_MODES.md](RUNTIME_MODES.md) for complete feature comparison and usage guide.
 
 ### Notice
 
