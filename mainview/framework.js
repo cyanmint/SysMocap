@@ -10,7 +10,81 @@
 
 var ipcRenderer = null;
 var remote = null;
-var platform = "web";
+var platform = typeof navigator !== 'undefined' ? (navigator.userAgent.includes('Android') ? 'android' : (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad') ? 'ios' : 'web')) : "web";
+
+// Browser compatibility shim
+const isBrowserMode = typeof window !== 'undefined' && (typeof process === 'undefined' || !process.versions || !process.versions.electron);
+
+// IPC shim for browser mode
+if (isBrowserMode) {
+    ipcRenderer = {
+        send: function(channel, ...args) {
+            // Emit custom events for browser mode
+            window.dispatchEvent(new CustomEvent('ipc-' + channel, { detail: args }));
+        },
+        on: function(channel, callback) {
+            window.addEventListener('ipc-' + channel, (e) => {
+                callback(e, e.detail);
+            });
+        }
+    };
+    
+    remote = {
+        getGlobal: function(name) {
+            if (name === 'appInfo') {
+                return { appVersion: '0.7.3-browser', appName: 'SysMocap Browser' };
+            }
+            if (name === 'storagePath') {
+                return { jsonPath: 'sysmocap-browser' };
+            }
+            return {};
+        },
+        app: {
+            getGPUInfo: async function() {
+                // Try to get GPU info from WebGL
+                try {
+                    const canvas = document.createElement('canvas');
+                    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                    if (gl) {
+                        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+                        if (debugInfo) {
+                            return {
+                                gpuDevice: [{
+                                    description: gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL)
+                                }]
+                            };
+                        }
+                    }
+                } catch (e) {
+                    console.error('Failed to get GPU info:', e);
+                }
+                return { gpuDevice: [{ description: 'Unknown (Browser Mode)' }] };
+            }
+        },
+        dialog: {
+            showOpenDialogSync: function(options) {
+                // In browser mode, we need to use file input
+                console.warn('File dialog not available in browser mode. Use file input instead.');
+                return null;
+            }
+        },
+        getCurrentWindow: function() {
+            return {
+                isMaximized: () => false,
+                restore: () => {},
+                maximize: () => {},
+                close: () => window.close()
+            };
+        },
+        systemPreferences: {
+            getMediaAccessStatus: () => 'granted',
+            askForMediaAccess: async () => true
+        },
+        nativeTheme: {
+            themeSource: 'system'
+        }
+    };
+}
 
 var mixamorig = {
     "Hips": {
@@ -163,8 +237,8 @@ function rgba2hex(rgba) {
         : "";
 }
 
-if (typeof require != "undefined") {
-    // import electron remote
+if (typeof require != "undefined" && !isBrowserMode) {
+    // Electron mode - import electron remote
     remote = require("@electron/remote");
 
     ipcRenderer = require("electron").ipcRenderer;

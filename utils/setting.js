@@ -10,9 +10,36 @@
  *  xianfei 2022.3
  */
 
-const storage = require("electron-localstorage");
-var remote = require("@electron/remote");
-storage.setStoragePath(remote.getGlobal("storagePath").jsonPath);
+// Detect if running in browser mode
+const isBrowser = typeof window !== 'undefined' && (typeof process === 'undefined' || !process.versions || !process.versions.electron);
+
+let storage, remote;
+
+if (isBrowser) {
+    // Browser-compatible storage
+    storage = {
+        getItem: function(key) {
+            try {
+                const item = localStorage.getItem(key);
+                return item ? JSON.parse(item) : null;
+            } catch (e) {
+                return null;
+            }
+        },
+        setItem: function(key, value) {
+            try {
+                localStorage.setItem(key, JSON.stringify(value));
+            } catch (e) {
+                console.error('Failed to save to localStorage:', e);
+            }
+        }
+    };
+} else {
+    // Electron mode
+    storage = require("electron-localstorage");
+    remote = require("@electron/remote");
+    storage.setStoragePath(remote.getGlobal("storagePath").jsonPath);
+}
 
 var currentVer = 0.5;
 
@@ -24,7 +51,7 @@ function getSettings() {
             ui: {
                 themeColor: "indigo",
                 isDark: false,
-                useGlass: true,
+                useGlass: isBrowser ? false : true,
                 language:
                     window.navigator.language.split("-")[0] == "zh"
                         ? "zh"
@@ -63,7 +90,7 @@ function getSettings() {
             performance: {
                 useDgpu: false,
                 GPUs: 0,
-                useDescrertionProcess: require("os").platform() == "darwin",
+                useDescrertionProcess: isBrowser ? false : require("os").platform() == "darwin",
             },
             valued: true,
             ver: currentVer,

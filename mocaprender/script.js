@@ -8,10 +8,21 @@
  *  xianfei 2022.3, last modified 2024.7
  */
 
+// Detect if running in browser mode
+const isBrowserMode = typeof window !== 'undefined' && (typeof process === 'undefined' || !process.versions || !process.versions.electron);
+
 // import setting utils
 const globalSettings = window.parent.window.sysmocapApp.settings;
 
-const { languages } = require("../utils/language.js");
+let languages;
+if (isBrowserMode) {
+    // For browser mode, we need to load languages differently
+    // Since we can't use require in browser, we'll need to make language.js browser-compatible
+    languages = window.parent.window.languages || { en: {}, zh: {} };
+} else {
+    const langModule = require("../utils/language.js");
+    languages = langModule.languages;
+}
 
 var hipRotationOffset = 0.0
 
@@ -34,8 +45,24 @@ document.body.setAttribute(
 // import mocap web server
 var my_server = null;
 var ipcRenderer = null;
-if (globalSettings.forward.enableForwarding)
-    ipcRenderer = require("electron").ipcRenderer;
+if (isBrowserMode) {
+    // Browser IPC shim
+    if (globalSettings.forward.enableForwarding) {
+        ipcRenderer = {
+            send: function(channel, ...args) {
+                window.dispatchEvent(new CustomEvent('ipc-' + channel, { detail: args }));
+            },
+            on: function(channel, callback) {
+                window.addEventListener('ipc-' + channel, (e) => {
+                    callback(e, e.detail);
+                });
+            }
+        };
+    }
+} else {
+    if (globalSettings.forward.enableForwarding)
+        ipcRenderer = require("electron").ipcRenderer;
+}
 // my_server = require("../webserv/server.js");
 
 // import Helper Functions from Kalidokit
