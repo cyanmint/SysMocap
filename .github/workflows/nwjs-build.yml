@@ -234,29 +234,35 @@ jobs:
               <access origin="*" />
               <allow-intent href="http://*/*" />
               <allow-intent href="https://*/*" />
+              <allow-navigation href="*" />
               <preference name="DisallowOverscroll" value="true" />
               <preference name="android-minSdkVersion" value="24" />
               <preference name="android-targetSdkVersion" value="33" />
               <preference name="Fullscreen" value="false" />
+              <preference name="Orientation" value="default" />
               <platform name="android">
                   <allow-intent href="market:*" />
-                  <icon density="ldpi" src="icons/android/ldpi.png" />
-                  <icon density="mdpi" src="icons/android/mdpi.png" />
-                  <icon density="hdpi" src="icons/android/hdpi.png" />
-                  <icon density="xhdpi" src="icons/android/xhdpi.png" />
-                  <icon density="xxhdpi" src="icons/android/xxhdpi.png" />
-                  <icon density="xxxhdpi" src="icons/android/xxxhdpi.png" />
                   <preference name="AndroidXEnabled" value="true" />
+                  <preference name="GradlePluginKotlinEnabled" value="true" />
+                  <preference name="GradlePluginKotlinCodeStyle" value="official" />
+                  <preference name="GradlePluginKotlinVersion" value="1.7.21" />
+                  <config-file parent="/*" target="res/xml/network_security_config.xml">
+                      <network-security-config>
+                          <base-config cleartextTrafficPermitted="true">
+                              <trust-anchors>
+                                  <certificates src="system" />
+                              </trust-anchors>
+                          </base-config>
+                      </network-security-config>
+                  </config-file>
               </platform>
-              <feature name="Camera">
-                  <param name="android-package" value="org.apache.cordova.camera.CameraLauncher" />
-              </feature>
               <uses-permission android:name="android.permission.CAMERA" />
               <uses-permission android:name="android.permission.RECORD_AUDIO" />
               <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
               <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
               <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
               <uses-permission android:name="android.permission.INTERNET" />
+              <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
               <uses-feature android:name="android.hardware.camera" android:required="true" />
               <uses-feature android:name="android.hardware.camera.autofocus" />
           </widget>
