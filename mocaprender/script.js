@@ -853,26 +853,41 @@ function changeTarget(target) {
 
 window.changeTarget = changeTarget;
 
-// Fullscreen toggle function
+// Fullscreen toggle function - only fullscreens the output model, not the camera
 function toggleFullscreen() {
-    const elem = document.documentElement;
+    const modelElem = document.getElementById('model');
+    const previewElem = document.querySelector('.preview');
+    const controllerElem = document.getElementById('controller');
     const icon = document.getElementById('fullscreen-icon');
     
     if (!document.fullscreenElement && !document.webkitFullscreenElement && 
         !document.mozFullScreenElement && !document.msFullscreenElement) {
-        // Enter fullscreen
-        if (elem.requestFullscreen) {
-            elem.requestFullscreen();
-        } else if (elem.webkitRequestFullscreen) {
-            elem.webkitRequestFullscreen();
-        } else if (elem.mozRequestFullScreen) {
-            elem.mozRequestFullScreen();
-        } else if (elem.msRequestFullscreen) {
-            elem.msRequestFullscreen();
+        // Enter fullscreen - hide preview and controller
+        if (previewElem) previewElem.style.display = 'none';
+        if (controllerElem) controllerElem.style.display = 'none';
+        
+        // Make model fullscreen
+        if (modelElem.requestFullscreen) {
+            modelElem.requestFullscreen();
+        } else if (modelElem.webkitRequestFullscreen) {
+            modelElem.webkitRequestFullscreen();
+        } else if (modelElem.mozRequestFullScreen) {
+            modelElem.mozRequestFullScreen();
+        } else if (modelElem.msRequestFullscreen) {
+            modelElem.msRequestFullscreen();
         }
+        
+        // Style adjustments for fullscreen model
+        modelElem.style.width = '100vw';
+        modelElem.style.height = '100vh';
+        modelElem.style.top = '0';
+        modelElem.style.left = '0';
+        modelElem.style.border = 'none';
+        modelElem.style.borderRadius = '0';
+        
         if (icon) icon.textContent = 'fullscreen_exit';
     } else {
-        // Exit fullscreen
+        // Exit fullscreen - restore preview and controller
         if (document.exitFullscreen) {
             document.exitFullscreen();
         } else if (document.webkitExitFullscreen) {
@@ -882,6 +897,18 @@ function toggleFullscreen() {
         } else if (document.msExitFullscreen) {
             document.msExitFullscreen();
         }
+        
+        // Restore original styles
+        modelElem.style.width = '';
+        modelElem.style.height = '';
+        modelElem.style.top = '';
+        modelElem.style.left = '';
+        modelElem.style.border = '';
+        modelElem.style.borderRadius = '';
+        
+        if (previewElem) previewElem.style.display = '';
+        if (controllerElem) controllerElem.style.display = '';
+        
         if (icon) icon.textContent = 'fullscreen';
     }
 }
@@ -891,11 +918,30 @@ window.toggleFullscreen = toggleFullscreen;
 // Update fullscreen icon based on current state
 function updateFullscreenIcon() {
     const icon = document.getElementById('fullscreen-icon');
+    const modelElem = document.getElementById('model');
+    const previewElem = document.querySelector('.preview');
+    const controllerElem = document.getElementById('controller');
+    
     if (!icon) return;
     
     const isFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement || 
                             document.mozFullScreenElement || document.msFullscreenElement);
+    
     icon.textContent = isFullscreen ? 'fullscreen_exit' : 'fullscreen';
+    
+    // If exiting fullscreen, restore visibility
+    if (!isFullscreen) {
+        if (modelElem) {
+            modelElem.style.width = '';
+            modelElem.style.height = '';
+            modelElem.style.top = '';
+            modelElem.style.left = '';
+            modelElem.style.border = '';
+            modelElem.style.borderRadius = '';
+        }
+        if (previewElem) previewElem.style.display = '';
+        if (controllerElem) controllerElem.style.display = '';
+    }
 }
 
 // Listen for fullscreen changes to update the icon

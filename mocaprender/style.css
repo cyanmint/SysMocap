@@ -43,26 +43,54 @@
 @media (max-width: 768px) {
     #model {
         width: calc(100% - 20px) !important;
+        height: calc((100vw - 20px) * 16 / 9) !important;
+        max-height: 70vh !important;
         top: 10px !important;
         left: 10px !important;
-        height: auto !important;
+        position: fixed !important;
     }
     
     .preview .guides,
     .preview .input_video {
-        width: calc(100% - 20px) !important;
+        width: calc(50% - 15px) !important;
+        height: auto !important;
+        max-height: 25vh !important;
         top: auto !important;
         bottom: 10px !important;
         left: 10px !important;
+        position: fixed !important;
+    }
+    
+    .preview .guides {
+        left: calc(50% + 5px) !important;
     }
     
     #controller {
         bottom: auto !important;
-        top: 10px !important;
+        top: calc(70vh + 20px) !important;
         right: 10px !important;
+        z-index: 1001 !important;
     }
     
     #controller > div:first-child {
         display: none !important;
+    }
+    
+    #loading {
+        width: 90% !important;
+        left: 5% !important;
+        top: 40% !important;
+    }
+}
+
+/* Portrait orientation specific adjustments */
+@media (max-width: 768px) and (orientation: portrait) {
+    #model {
+        height: calc((100vw - 20px) * 4 / 3) !important;
+        max-height: 60vh !important;
+    }
+    
+    #controller {
+        top: calc(60vh + 20px) !important;
     }
 }
