@@ -140,6 +140,8 @@ jobs:
             fi
           done
           ls -la *.tar.gz || true
+          cd ${{ github.workspace }}
+          mv ../OutApp .
 
       - name: Create archives (Windows)
         if: runner.os == 'Windows'
@@ -149,6 +151,8 @@ jobs:
             Compress-Archive -Path $_.FullName -DestinationPath "$($_.Name).zip"
           }
           Get-ChildItem *.zip
+          cd ${{ github.workspace }}
+          move OutApp .
 
       # step8: upload desktop artifacts
       - name: Upload NW.js desktop artifacts
@@ -156,8 +160,7 @@ jobs:
         with:
           name: SysMocap-NWjs-${{ matrix.platform }}-${{ steps.get_version.outputs.VERSION }}
           path: |
-            ${{ github.workspace }}/../OutApp/nw/*.tar.gz
-            ${{ github.workspace }}/../OutApp/nw/*.zip
+            ${{ github.workspace }}/OutApp
           retention-days: 90
 
   # Build NW.js for Android
