@@ -206,7 +206,16 @@ body.force-landscape #model {
 /* Skeleton overlay mode - overlays skeleton on top of camera view */
 @media (min-width: 769px) {
     body.skeleton-overlay .preview .guides {
+        /* Position guides canvas exactly on top of input video */
         left: 50% !important;
+        top: 10px !important;
         z-index: 1001;
+        pointer-events: none;
+    }
+    
+    /* Ensure both video and guides have same dimensions when overlaying */
+    body.skeleton-overlay .preview .input_video,
+    body.skeleton-overlay .preview .guides {
+        width: 48% !important;
     }
 }
