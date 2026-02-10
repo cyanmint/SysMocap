@@ -34,12 +34,16 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { VRMLoaderPlugin, VRMUtils } from "@pixiv/three-vrm";
 
 // set theme
+const orientationClass = globalSettings.output.orientation === 'portrait' ? ' force-portrait' : ' force-landscape';
+const viewportSizeClass = ' viewport-' + (globalSettings.output.viewportSize || 'medium');
 document.body.setAttribute(
     "class",
     "mdui-theme-layout-auto mdui-theme-primary-" +
         globalSettings.ui.themeColor +
         " mdui-theme-accent-" +
-        globalSettings.ui.themeColor
+        globalSettings.ui.themeColor +
+        orientationClass +
+        viewportSizeClass
 );
 
 // import mocap web server
@@ -91,12 +95,7 @@ document.querySelector("#model").appendChild(renderer.domElement);
 window.addEventListener(
     "resize",
     function () {
-        orbitCamera.aspect = 16 / 9;
-        orbitCamera.updateProjectionMatrix();
-        renderer.setSize(
-            document.querySelector("#model").clientWidth,
-            (document.querySelector("#model").clientWidth / 16) * 9
-        );
+        resizeRendererToContainer();
     },
     false
 );
@@ -852,6 +851,157 @@ function changeTarget(target) {
 }
 
 window.changeTarget = changeTarget;
+
+// Delay for fullscreen transition (in milliseconds)
+const FULLSCREEN_TRANSITION_DELAY = 100;
+
+// Helper function to resize renderer to match container dimensions
+function resizeRendererToContainer() {
+    const modelElem = document.getElementById('model');
+    if (!modelElem) return;
+    
+    const width = modelElem.clientWidth;
+    const height = modelElem.clientHeight;
+    
+    // Update renderer size to match container
+    renderer.setSize(width, height);
+    
+    // Update camera aspect ratio
+    orbitCamera.aspect = width / height;
+    orbitCamera.updateProjectionMatrix();
+}
+
+// Fullscreen toggle function - only fullscreens the output model, not the camera
+function toggleFullscreen() {
+    const modelElem = document.getElementById('model');
+    const previewElem = document.querySelector('.preview');
+    const controllerElem = document.getElementById('controller');
+    const icon = document.getElementById('fullscreen-icon');
+    
+    if (!document.fullscreenElement && !document.webkitFullscreenElement && 
+        !document.mozFullScreenElement && !document.msFullscreenElement) {
+        // Enter fullscreen - hide preview and controller
+        if (previewElem) previewElem.style.display = 'none';
+        if (controllerElem) controllerElem.style.display = 'none';
+        
+        // Make model fullscreen
+        if (modelElem.requestFullscreen) {
+            modelElem.requestFullscreen();
+        } else if (modelElem.webkitRequestFullscreen) {
+            modelElem.webkitRequestFullscreen();
+        } else if (modelElem.mozRequestFullScreen) {
+            modelElem.mozRequestFullScreen();
+        } else if (modelElem.msRequestFullscreen) {
+            modelElem.msRequestFullscreen();
+        }
+        
+        // Style adjustments for fullscreen model - fill actual viewport
+        modelElem.style.width = '100vw';
+        modelElem.style.height = '100vh';
+        modelElem.style.top = '0';
+        modelElem.style.left = '0';
+        modelElem.style.border = 'none';
+        modelElem.style.borderRadius = '0';
+        modelElem.style.position = 'fixed';
+        
+        // Respect orientation setting in fullscreen
+        const orientation = globalSettings.output.orientation;
+        if (orientation === 'portrait') {
+            // For portrait, maintain 3:4 aspect ratio centered
+            modelElem.style.width = 'auto';
+            modelElem.style.height = '100vh';
+            modelElem.style.aspectRatio = '3/4';
+            modelElem.style.left = '50%';
+            modelElem.style.transform = 'translateX(-50%)';
+        } else {
+            // For landscape, maintain 16:9 aspect ratio centered
+            modelElem.style.width = '100vw';
+            modelElem.style.height = 'auto';
+            modelElem.style.aspectRatio = '16/9';
+            modelElem.style.top = '50%';
+            modelElem.style.transform = 'translateY(-50%)';
+        }
+        
+        // Resize renderer to fullscreen dimensions after a short delay
+        // to ensure fullscreen transition is complete
+        setTimeout(() => {
+            resizeRendererToContainer();
+        }, FULLSCREEN_TRANSITION_DELAY);
+        
+        if (icon) icon.textContent = 'fullscreen_exit';
+    } else {
+        // Exit fullscreen
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+        } else if (document.mozCancelFullScreen) {
+            document.mozCancelFullScreen();
+        } else if (document.msExitFullscreen) {
+            document.msExitFullscreen();
+        }
+        
+        // Restore original styles
+        restoreModelStyles();
+        
+        // Resize renderer back to normal after a short delay
+        setTimeout(() => {
+            resizeRendererToContainer();
+        }, FULLSCREEN_TRANSITION_DELAY);
+        
+        if (icon) icon.textContent = 'fullscreen';
+    }
+}
+
+window.toggleFullscreen = toggleFullscreen;
+
+// Helper function to restore model styles and show preview/controller
+function restoreModelStyles() {
+    const modelElem = document.getElementById('model');
+    const previewElem = document.querySelector('.preview');
+    const controllerElem = document.getElementById('controller');
+    
+    if (modelElem) {
+        modelElem.style.width = '';
+        modelElem.style.height = '';
+        modelElem.style.top = '';
+        modelElem.style.left = '';
+        modelElem.style.border = '';
+        modelElem.style.borderRadius = '';
+        modelElem.style.position = '';
+        modelElem.style.aspectRatio = '';
+        modelElem.style.transform = '';
+    }
+    if (previewElem) previewElem.style.display = '';
+    if (controllerElem) controllerElem.style.display = '';
+}
+
+// Update fullscreen icon based on current state
+function updateFullscreenIcon() {
+    const icon = document.getElementById('fullscreen-icon');
+    
+    if (!icon) return;
+    
+    const isFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement || 
+                            document.mozFullScreenElement || document.msFullscreenElement);
+    
+    icon.textContent = isFullscreen ? 'fullscreen_exit' : 'fullscreen';
+    
+    // If exiting fullscreen, restore visibility and resize renderer
+    if (!isFullscreen) {
+        restoreModelStyles();
+        // Resize renderer back to normal after a short delay
+        setTimeout(() => {
+            resizeRendererToContainer();
+        }, FULLSCREEN_TRANSITION_DELAY);
+    }
+}
+
+// Listen for fullscreen changes to update the icon
+document.addEventListener('fullscreenchange', updateFullscreenIcon);
+document.addEventListener('webkitfullscreenchange', updateFullscreenIcon);
+document.addEventListener('mozfullscreenchange', updateFullscreenIcon);
+document.addEventListener('msfullscreenchange', updateFullscreenIcon);
 
 // keyborad control camera position
 document.addEventListener("keydown", (event) => {

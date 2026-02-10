@@ -8,6 +8,7 @@
 
 .targetButton{
     width: 80px;
+    min-width: 80px;
     transform: scale(0.8);
     height: 28px;
     border: solid 1px #ccc;
@@ -35,4 +36,169 @@
     font-size: 16px;
     text-transform:uppercase;
     margin-left: 6px;
+    white-space: nowrap;
+}
+
+/* Viewport size classes - desktop only */
+@media (min-width: 769px) {
+    body.viewport-small #model {
+        max-width: 640px;
+        max-height: 480px;
+    }
+    
+    body.viewport-medium #model {
+        max-width: 1280px;
+        max-height: 720px;
+    }
+    
+    body.viewport-large #model {
+        max-width: 1920px;
+        max-height: 1080px;
+    }
+    
+    body.viewport-full #model {
+        width: 100vw !important;
+        height: 100vh !important;
+        max-width: none !important;
+        max-height: none !important;
+        top: 0 !important;
+        left: 0 !important;
+    }
+}
+
+/* Mobile-friendly layout: responsive output with camera preview */
+@media (max-width: 768px) {
+    body {
+        overflow-x: hidden !important;
+    }
+    
+    #model {
+        width: calc(100vw - 20px) !important;
+        height: calc(60vh - 20px) !important;
+        top: 10px !important;
+        left: 10px !important;
+        position: fixed !important;
+    }
+    
+    .preview .guides,
+    .preview .input_video {
+        width: calc(50% - 15px) !important;
+        height: auto !important;
+        max-height: calc(35vh - 20px) !important;
+        top: calc(60vh + 10px) !important;
+        bottom: auto !important;
+        left: 10px !important;
+        position: fixed !important;
+    }
+    
+    .preview .guides {
+        left: calc(50% + 5px) !important;
+    }
+    
+    #controller {
+        bottom: 10px !important;
+        top: auto !important;
+        right: 10px !important;
+        z-index: 1001 !important;
+    }
+    
+    #controller > div:first-child {
+        display: none !important;
+    }
+    
+    #loading {
+        width: 90% !important;
+        left: 5% !important;
+        top: 40% !important;
+    }
+}
+
+/* Portrait orientation - fill screen vertically */
+@media (max-width: 768px) and (orientation: portrait) {
+    body:not(.force-landscape) #model {
+        width: calc(100vw - 20px) !important;
+        height: calc(60vh - 20px) !important;
+        max-height: none !important;
+    }
+    
+    body:not(.force-landscape) .preview .guides,
+    body:not(.force-landscape) .preview .input_video {
+        top: calc(60vh + 10px) !important;
+        max-height: calc(35vh - 20px) !important;
+    }
+    
+    body:not(.force-landscape) #controller {
+        bottom: 10px !important;
+        top: auto !important;
+    }
+}
+
+/* Landscape orientation - fill screen horizontally */
+@media (max-width: 768px) and (orientation: landscape) {
+    body:not(.force-portrait) #model {
+        width: calc(100vw - 20px) !important;
+        height: calc(65vh - 20px) !important;
+        max-height: none !important;
+    }
+    
+    body:not(.force-portrait) .preview .guides,
+    body:not(.force-portrait) .preview .input_video {
+        top: calc(65vh + 10px) !important;
+        max-height: calc(30vh - 20px) !important;
+    }
+    
+    body:not(.force-portrait) #controller {
+        bottom: 10px !important;
+        top: auto !important;
+    }
+}
+
+/* Force portrait mode (when setting is portrait) - applies to all screen sizes */
+body.force-portrait #model {
+    aspect-ratio: 3/4 !important;
+}
+
+@media (max-width: 768px) {
+    body.force-portrait #model {
+        width: calc(100vw - 20px) !important;
+        height: calc(60vh - 20px) !important;
+        max-height: none !important;
+        aspect-ratio: auto !important;
+    }
+    
+    body.force-portrait .preview .guides,
+    body.force-portrait .preview .input_video {
+        top: calc(60vh + 10px) !important;
+        max-height: calc(35vh - 20px) !important;
+    }
+    
+    body.force-portrait #controller {
+        bottom: 10px !important;
+        top: auto !important;
+    }
+}
+
+/* Force landscape mode (when setting is landscape) - applies to all screen sizes */
+body.force-landscape #model {
+    aspect-ratio: 16/9 !important;
+}
+
+@media (max-width: 768px) {
+    body.force-landscape #model {
+        width: calc(100vw - 20px) !important;
+        height: calc(65vh - 20px) !important;
+        max-height: none !important;
+        aspect-ratio: auto !important;
+    }
+    
+    body.force-landscape .preview .guides,
+    body.force-landscape .preview .input_video {
+        top: calc(65vh + 10px) !important;
+        max-height: calc(30vh - 20px) !important;
+    }
+    
+    body.force-landscape #controller {
+        bottom: 10px !important;
+        top: auto !important;
+    }
 }
