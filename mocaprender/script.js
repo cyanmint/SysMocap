@@ -85,10 +85,11 @@ const renderer = new THREE.WebGLRenderer({
     alpha: true,
     antialias: globalSettings.output.antialias,
 });
-renderer.setSize(
-    document.querySelector("#model").clientWidth,
-    (document.querySelector("#model").clientWidth / 16) * 9
-);
+
+// Initial renderer size - will be updated once video loads
+const initialWidth = document.querySelector("#model").clientWidth;
+const initialHeight = (initialWidth / 16) * 9; // Start with 16:9, will adjust when video loads
+renderer.setSize(initialWidth, initialHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
 document.querySelector("#model").appendChild(renderer.domElement);
 
@@ -926,15 +927,24 @@ function resizeRendererToContainer() {
     if (!modelElem) return;
     
     const width = modelElem.clientWidth;
-    // Calculate height based on 16:9 aspect ratio, not container height
-    // This allows container to expand to fit canvas
-    const height = (width / 16) * 9;
+    
+    // Get aspect ratio from video element if available, otherwise fallback to 16:9
+    const videoElement = document.querySelector('.input_video');
+    let aspectRatio = 16 / 9; // Default fallback
+    
+    if (videoElement && videoElement.videoWidth && videoElement.videoHeight) {
+        aspectRatio = videoElement.videoWidth / videoElement.videoHeight;
+    }
+    
+    // Calculate height based on video aspect ratio
+    // This allows container to expand to fit canvas while matching camera input
+    const height = width / aspectRatio;
     
     // Update renderer size to match container width and calculated height
     renderer.setSize(width, height);
     
     // Update camera aspect ratio
-    orbitCamera.aspect = width / height;
+    orbitCamera.aspect = aspectRatio;
     orbitCamera.updateProjectionMatrix();
 }
 
