@@ -39,12 +39,15 @@
     white-space: nowrap;
 }
 
-/* Mobile-friendly layout: stack output on top, camera preview on bottom */
+/* Mobile-friendly layout: responsive output with camera preview */
 @media (max-width: 768px) {
+    body {
+        overflow-x: hidden !important;
+    }
+    
     #model {
-        width: calc(100% - 20px) !important;
-        height: calc((100vw - 20px) * 16 / 9) !important;
-        max-height: 70vh !important;
+        width: calc(100vw - 20px) !important;
+        height: calc(100vh - 40vh - 30px) !important;
         top: 10px !important;
         left: 10px !important;
         position: fixed !important;
@@ -54,7 +57,7 @@
     .preview .input_video {
         width: calc(50% - 15px) !important;
         height: auto !important;
-        max-height: 25vh !important;
+        max-height: 35vh !important;
         top: auto !important;
         bottom: 10px !important;
         left: 10px !important;
@@ -67,7 +70,7 @@
     
     #controller {
         bottom: auto !important;
-        top: calc(70vh + 20px) !important;
+        top: calc(100vh - 35vh - 50px) !important;
         right: 10px !important;
         z-index: 1001 !important;
     }
@@ -83,14 +86,33 @@
     }
 }
 
-/* Portrait orientation specific adjustments */
+/* Portrait orientation - fill screen vertically */
 @media (max-width: 768px) and (orientation: portrait) {
     #model {
-        height: calc((100vw - 20px) * 4 / 3) !important;
-        max-height: 60vh !important;
+        width: calc(100vw - 20px) !important;
+        height: calc(100vh - 35vh - 30px) !important;
+        max-height: none !important;
     }
     
     #controller {
-        top: calc(60vh + 20px) !important;
+        top: calc(100vh - 35vh - 50px) !important;
+    }
+}
+
+/* Landscape orientation - fill screen horizontally */
+@media (max-width: 768px) and (orientation: landscape) {
+    #model {
+        width: calc(100vw - 20px) !important;
+        height: calc(100vh - 30vh - 30px) !important;
+        max-height: none !important;
+    }
+    
+    .preview .guides,
+    .preview .input_video {
+        max-height: 25vh !important;
+    }
+    
+    #controller {
+        top: calc(100vh - 30vh - 50px) !important;
     }
 }
