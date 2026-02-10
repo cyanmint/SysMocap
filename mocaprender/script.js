@@ -853,6 +853,55 @@ function changeTarget(target) {
 
 window.changeTarget = changeTarget;
 
+// Fullscreen toggle function
+function toggleFullscreen() {
+    const elem = document.documentElement;
+    const icon = document.getElementById('fullscreen-icon');
+    
+    if (!document.fullscreenElement && !document.webkitFullscreenElement && 
+        !document.mozFullScreenElement && !document.msFullscreenElement) {
+        // Enter fullscreen
+        if (elem.requestFullscreen) {
+            elem.requestFullscreen();
+        } else if (elem.webkitRequestFullscreen) {
+            elem.webkitRequestFullscreen();
+        } else if (elem.mozRequestFullScreen) {
+            elem.mozRequestFullScreen();
+        } else if (elem.msRequestFullscreen) {
+            elem.msRequestFullscreen();
+        }
+        if (icon) icon.textContent = 'fullscreen_exit';
+    } else {
+        // Exit fullscreen
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+        } else if (document.mozCancelFullScreen) {
+            document.mozCancelFullScreen();
+        } else if (document.msExitFullscreen) {
+            document.msExitFullscreen();
+        }
+        if (icon) icon.textContent = 'fullscreen';
+    }
+}
+
+window.toggleFullscreen = toggleFullscreen;
+
+// Listen for fullscreen changes to update the icon
+document.addEventListener('fullscreenchange', () => {
+    const icon = document.getElementById('fullscreen-icon');
+    if (icon) {
+        icon.textContent = document.fullscreenElement ? 'fullscreen_exit' : 'fullscreen';
+    }
+});
+document.addEventListener('webkitfullscreenchange', () => {
+    const icon = document.getElementById('fullscreen-icon');
+    if (icon) {
+        icon.textContent = document.webkitFullscreenElement ? 'fullscreen_exit' : 'fullscreen';
+    }
+});
+
 // keyborad control camera position
 document.addEventListener("keydown", (event) => {
     var step = 0.1;

@@ -8,6 +8,7 @@
 
 .targetButton{
     width: 80px;
+    min-width: 80px;
     transform: scale(0.8);
     height: 28px;
     border: solid 1px #ccc;
@@ -35,4 +36,33 @@
     font-size: 16px;
     text-transform:uppercase;
     margin-left: 6px;
+    white-space: nowrap;
+}
+
+/* Mobile-friendly layout: stack output on top, camera preview on bottom */
+@media (max-width: 768px) {
+    #model {
+        width: calc(100% - 20px) !important;
+        top: 10px !important;
+        left: 10px !important;
+        height: auto !important;
+    }
+    
+    .preview .guides,
+    .preview .input_video {
+        width: calc(100% - 20px) !important;
+        top: auto !important;
+        bottom: 10px !important;
+        left: 10px !important;
+    }
+    
+    #controller {
+        bottom: auto !important;
+        top: 10px !important;
+        right: 10px !important;
+    }
+    
+    #controller > div:first-child {
+        display: none !important;
+    }
 }

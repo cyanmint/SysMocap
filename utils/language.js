@@ -15,9 +15,11 @@ const languageData = {
                 optAdd: "导入",
                 optHide: "隐藏",
                 dragModel: "把模型拖到这儿来~",
+                clickOrDragModel: "点击或把模型拖到这儿来~",
                 suppotFormat: "支持VRM/GLB/GLTF/FBX，详细说明参见",
                 here: "这里",
                 dragImage: "把图片拖到这儿来~",
+                clickOrDragImage: "点击或把图片拖到这儿来~",
                 open: "打开",
                 setAsDefault: "设为默认",
                 showInFinder: "在 Finder 中显示",
@@ -116,7 +118,8 @@ const languageData = {
                 face:"特写",
                 halfbody:"半身",
                 init:"初始化动作捕捉引擎...",
-                rec:"正在录制，按R键停止"
+                rec:"正在录制，按R键停止",
+                fullscreen:"全屏"
             }
         },
         en: {
@@ -134,9 +137,11 @@ const languageData = {
                 optAdd: "Import",
                 optHide: "Hide",
                 dragModel: "Drag model here",
+                clickOrDragModel: "Click or drag model here",
                 suppotFormat: "Supported VRM/GLB/GLTF/FBX, details see",
                 here: " here",
                 dragImage: "Drag image here",
+                clickOrDragImage: "Click or drag image here",
                 open: "Open",
                 setAsDefault: "Set as default",
                 showInFinder: "Show in Finder",
@@ -236,7 +241,8 @@ const languageData = {
                 face: "Close-up",
                 halfbody: "Half body",
                 init: "Initializing motion capture engine...",
-                rec: "Recording in progress, press R to stop"
+                rec: "Recording in progress, press R to stop",
+                fullscreen: "Fullscreen"
             }
         },
     },

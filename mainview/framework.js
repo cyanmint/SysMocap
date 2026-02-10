@@ -671,6 +671,63 @@ if (typeof require != "undefined" && !isBrowserMode) {
         }
     };
 
+    // Handle file selection from file input (click-to-add functionality)
+    window.handleModelFileSelect = function(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        // In browser mode, use the File object directly
+        if (window.isBrowserMode) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const name_ = file.name;
+                const name = name_.substr(0, name_.lastIndexOf("."));
+                const type = name_.substr(name_.lastIndexOf(".") + 1);
+                
+                app.modelImporterName = name;
+                app.modelImporterType = type;
+                app.modelImporterPath = e.target.result; // Use data URL in browser mode
+                app.showModelImporter = 2;
+            };
+            reader.readAsDataURL(file);
+        } else {
+            // In Electron/NW.js mode, use file path
+            const filePath = file.path.replaceAll("\\", "/");
+            const name_ = file.name;
+            const name = name_.substr(0, name_.lastIndexOf("."));
+            const type = name_.substr(name_.lastIndexOf(".") + 1);
+            
+            app.modelImporterName = name;
+            app.modelImporterType = type;
+            app.modelImporterPath = filePath;
+            app.showModelImporter = 2;
+        }
+        
+        // Reset file input
+        event.target.value = '';
+    };
+
+    window.handleImageFileSelect = function(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        // In browser mode, use the File object directly
+        if (window.isBrowserMode) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                app.modelImporterImg = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        } else {
+            // In Electron/NW.js mode, use file path
+            const filePath = file.path.replaceAll("\\", "/");
+            app.modelImporterImg = filePath;
+        }
+        
+        // Reset file input
+        event.target.value = '';
+    };
+
     // find by name in app.userModels
     function findModelByName(name) {
         if (app.userModels)
