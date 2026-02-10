@@ -871,6 +871,28 @@ function resizeRendererToContainer() {
     orbitCamera.updateProjectionMatrix();
 }
 
+// Function to update viewport settings at runtime
+function updateViewportSettings(orientation, viewportSize) {
+    // Remove old orientation and viewport size classes
+    document.body.classList.remove('force-portrait', 'force-landscape');
+    document.body.classList.remove('viewport-small', 'viewport-medium', 'viewport-large', 'viewport-full');
+    
+    // Add new classes based on settings
+    const orientationClass = orientation === 'portrait' ? 'force-portrait' : 'force-landscape';
+    const viewportSizeClass = 'viewport-' + (viewportSize || 'medium');
+    
+    document.body.classList.add(orientationClass, viewportSizeClass);
+    
+    // Resize renderer to match new viewport dimensions after a short delay
+    // to ensure CSS transitions complete
+    setTimeout(() => {
+        resizeRendererToContainer();
+    }, 100);
+}
+
+// Expose function to parent window for runtime updates
+window.updateViewportSettings = updateViewportSettings;
+
 // Fullscreen toggle function - only fullscreens the output model, not the camera
 function toggleFullscreen() {
     const modelElem = document.getElementById('model');
@@ -895,7 +917,7 @@ function toggleFullscreen() {
             modelElem.msRequestFullscreen();
         }
         
-        // Style adjustments for fullscreen model - fill actual viewport
+        // Style adjustments for fullscreen model - fill entire screen
         modelElem.style.width = '100vw';
         modelElem.style.height = '100vh';
         modelElem.style.top = '0';
@@ -903,24 +925,8 @@ function toggleFullscreen() {
         modelElem.style.border = 'none';
         modelElem.style.borderRadius = '0';
         modelElem.style.position = 'fixed';
-        
-        // Respect orientation setting in fullscreen
-        const orientation = globalSettings.output.orientation;
-        if (orientation === 'portrait') {
-            // For portrait, maintain 3:4 aspect ratio centered
-            modelElem.style.width = 'auto';
-            modelElem.style.height = '100vh';
-            modelElem.style.aspectRatio = '3/4';
-            modelElem.style.left = '50%';
-            modelElem.style.transform = 'translateX(-50%)';
-        } else {
-            // For landscape, maintain 16:9 aspect ratio centered
-            modelElem.style.width = '100vw';
-            modelElem.style.height = 'auto';
-            modelElem.style.aspectRatio = '16/9';
-            modelElem.style.top = '50%';
-            modelElem.style.transform = 'translateY(-50%)';
-        }
+        modelElem.style.aspectRatio = '';
+        modelElem.style.transform = '';
         
         // Resize renderer to fullscreen dimensions after a short delay
         // to ensure fullscreen transition is complete
