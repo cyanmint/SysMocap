@@ -726,8 +726,17 @@ holistic.setOptions({
 holistic.onResults(onResults);
 
 const drawResults = (results) => {
-    guideCanvas.width = videoElement.videoWidth;
-    guideCanvas.height = videoElement.videoHeight;
+    // Set canvas internal dimensions to match its displayed size to prevent stretching
+    // Use offsetWidth/offsetHeight to get the CSS-rendered size
+    const displayWidth = guideCanvas.offsetWidth;
+    const displayHeight = guideCanvas.offsetHeight;
+    
+    // Only update canvas dimensions if they changed (to avoid unnecessary redraws)
+    if (guideCanvas.width !== displayWidth || guideCanvas.height !== displayHeight) {
+        guideCanvas.width = displayWidth;
+        guideCanvas.height = displayHeight;
+    }
+    
     let canvasCtx = guideCanvas.getContext("2d");
     canvasCtx.save();
     canvasCtx.clearRect(0, 0, guideCanvas.width, guideCanvas.height);
