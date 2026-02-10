@@ -786,6 +786,18 @@ if (localStorage.getItem("useCamera") == "camera") {
         .then(function (stream) {
             videoElement.srcObject = stream;
             videoElement.play();
+            
+            // Match viewport to camera dimensions once video is playing
+            videoElement.addEventListener('loadedmetadata', () => {
+                matchViewportToVideo();
+            }, { once: true });
+            
+            // Also try after a short delay to ensure dimensions are available
+            // This handles cases where loadedmetadata fires before dimensions are set
+            setTimeout(() => {
+                matchViewportToVideo();
+            }, 200);
+            
             var videoFrameCallback = async () => {
                 // videoElement.pause()
                 await holistic.send({ image: videoElement });
@@ -808,6 +820,17 @@ if (localStorage.getItem("useCamera") == "camera") {
 
     videoElement.style.transform = "";
     guideCanvas.style.transform = "";
+    
+    // Match viewport to video file dimensions once loaded
+    videoElement.addEventListener('loadedmetadata', () => {
+        matchViewportToVideo();
+    }, { once: true });
+    
+    // Also try after a short delay to ensure dimensions are available
+    // This handles cases where loadedmetadata fires before dimensions are set
+    setTimeout(() => {
+        matchViewportToVideo();
+    }, 200);
 
     var videoFrameCallback = async () => {
         // videoElement.pause()
@@ -824,6 +847,9 @@ var app = new Vue({
     data: {
         target: "face",
         languages: languages[globalSettings.ui.language],
+        showCamera: true,
+        showPreview: true,
+        showModel: true,
     },
 });
 
@@ -852,6 +878,36 @@ function changeTarget(target) {
 
 window.changeTarget = changeTarget;
 
+// Toggle functions for showing/hiding different elements
+function toggleCamera() {
+    app.showCamera = !app.showCamera;
+    const videoElement = document.querySelector('.input_video');
+    if (videoElement) {
+        videoElement.style.display = app.showCamera ? '' : 'none';
+    }
+}
+
+function togglePreview() {
+    app.showPreview = !app.showPreview;
+    const guideCanvas = document.querySelector('.guides');
+    if (guideCanvas) {
+        guideCanvas.style.display = app.showPreview ? '' : 'none';
+    }
+}
+
+function toggleModel() {
+    app.showModel = !app.showModel;
+    const modelElem = document.getElementById('model');
+    if (modelElem) {
+        modelElem.style.display = app.showModel ? '' : 'none';
+    }
+}
+
+// Expose toggle functions to window
+window.toggleCamera = toggleCamera;
+window.togglePreview = togglePreview;
+window.toggleModel = toggleModel;
+
 // Delay for fullscreen transition (in milliseconds)
 const FULLSCREEN_TRANSITION_DELAY = 100;
 
@@ -870,6 +926,72 @@ function resizeRendererToContainer() {
     orbitCamera.aspect = width / height;
     orbitCamera.updateProjectionMatrix();
 }
+
+// Function to update viewport settings at runtime
+function updateViewportSettings(orientation, viewportSize) {
+    // Remove old orientation and viewport size classes
+    document.body.classList.remove('force-portrait', 'force-landscape');
+    document.body.classList.remove('viewport-small', 'viewport-medium', 'viewport-large', 'viewport-full');
+    
+    // Add new classes based on settings
+    const orientationClass = orientation === 'portrait' ? 'force-portrait' : 'force-landscape';
+    const viewportSizeClass = 'viewport-' + (viewportSize || 'medium');
+    
+    document.body.classList.add(orientationClass, viewportSizeClass);
+    
+    // Resize renderer to match new viewport dimensions after a short delay
+    // to ensure CSS transitions complete
+    setTimeout(() => {
+        resizeRendererToContainer();
+    }, 100);
+}
+
+// Expose function to parent window for runtime updates
+window.updateViewportSettings = updateViewportSettings;
+
+// Function to match viewport aspect ratio to camera/video input
+function matchViewportToVideo(retryCount = 0) {
+    const videoElement = document.querySelector('.input_video');
+    const modelElem = document.getElementById('model');
+    
+    if (!videoElement || !modelElem) {
+        console.warn('matchViewportToVideo: video or model element not found');
+        return;
+    }
+    
+    // Check if video dimensions are available
+    if (!videoElement.videoWidth || !videoElement.videoHeight) {
+        // Retry up to 10 times with 100ms delay if dimensions aren't ready yet
+        if (retryCount < 10) {
+            console.log(`matchViewportToVideo: waiting for video dimensions (attempt ${retryCount + 1}/10)`);
+            setTimeout(() => matchViewportToVideo(retryCount + 1), 100);
+        } else {
+            console.warn('matchViewportToVideo: video dimensions not available after 10 retries');
+        }
+        return;
+    }
+    
+    // Get the video's actual dimensions
+    const videoWidth = videoElement.videoWidth;
+    const videoHeight = videoElement.videoHeight;
+    const videoAspect = videoWidth / videoHeight;
+    
+    // Update the model viewport to match video aspect ratio
+    // Use setProperty with priority to override CSS classes
+    modelElem.style.setProperty('aspect-ratio', `${videoWidth} / ${videoHeight}`, 'important');
+    
+    // Update camera aspect ratio
+    orbitCamera.aspect = videoAspect;
+    orbitCamera.updateProjectionMatrix();
+    
+    // Resize renderer
+    resizeRendererToContainer();
+    
+    console.log(`Matched viewport to video: ${videoWidth}x${videoHeight} (aspect: ${videoAspect.toFixed(2)})`);
+}
+
+// Expose to window for external calls
+window.matchViewportToVideo = matchViewportToVideo;
 
 // Fullscreen toggle function - only fullscreens the output model, not the camera
 function toggleFullscreen() {
@@ -895,7 +1017,7 @@ function toggleFullscreen() {
             modelElem.msRequestFullscreen();
         }
         
-        // Style adjustments for fullscreen model - fill actual viewport
+        // Style adjustments for fullscreen model - fill entire screen
         modelElem.style.width = '100vw';
         modelElem.style.height = '100vh';
         modelElem.style.top = '0';
@@ -903,24 +1025,8 @@ function toggleFullscreen() {
         modelElem.style.border = 'none';
         modelElem.style.borderRadius = '0';
         modelElem.style.position = 'fixed';
-        
-        // Respect orientation setting in fullscreen
-        const orientation = globalSettings.output.orientation;
-        if (orientation === 'portrait') {
-            // For portrait, maintain 3:4 aspect ratio centered
-            modelElem.style.width = 'auto';
-            modelElem.style.height = '100vh';
-            modelElem.style.aspectRatio = '3/4';
-            modelElem.style.left = '50%';
-            modelElem.style.transform = 'translateX(-50%)';
-        } else {
-            // For landscape, maintain 16:9 aspect ratio centered
-            modelElem.style.width = '100vw';
-            modelElem.style.height = 'auto';
-            modelElem.style.aspectRatio = '16/9';
-            modelElem.style.top = '50%';
-            modelElem.style.transform = 'translateY(-50%)';
-        }
+        modelElem.style.aspectRatio = '';
+        modelElem.style.transform = '';
         
         // Resize renderer to fullscreen dimensions after a short delay
         // to ensure fullscreen transition is complete

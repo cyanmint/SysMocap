@@ -183,6 +183,52 @@
                     </div>
                     <span style="font-size: 11px">{{languages.render.fullscreen}}</span>
                 </div>
+                <div
+                    class="targetButton mdui-ripple"
+                    v-bind:class="{'mdui-color-theme':showCamera}"
+                    onclick="toggleCamera()"
+                    style="margin-left: 10px"
+                >
+                    <div class="my-icon">
+                        <i
+                            class="mdui-icon material-icons"
+                            style="transform: scale(0.9); margin-top: -1px"
+                            id="camera-icon"
+                            >videocam</i
+                        >
+                    </div>
+                    <span style="font-size: 11px">{{languages.render.toggleCamera}}</span>
+                </div>
+                <div
+                    class="targetButton mdui-ripple"
+                    v-bind:class="{'mdui-color-theme':showPreview}"
+                    onclick="togglePreview()"
+                >
+                    <div class="my-icon">
+                        <i
+                            class="mdui-icon material-icons"
+                            style="transform: scale(0.9); margin-top: -1px"
+                            id="preview-icon"
+                            >accessibility_new</i
+                        >
+                    </div>
+                    <span style="font-size: 11px">{{languages.render.togglePreview}}</span>
+                </div>
+                <div
+                    class="targetButton mdui-ripple"
+                    v-bind:class="{'mdui-color-theme':showModel}"
+                    onclick="toggleModel()"
+                >
+                    <div class="my-icon">
+                        <i
+                            class="mdui-icon material-icons"
+                            style="transform: scale(0.9); margin-top: -1px"
+                            id="model-icon"
+                            >3d_rotation</i
+                        >
+                    </div>
+                    <span style="font-size: 11px">{{languages.render.toggleModel}}</span>
+                </div>
             </div>
 
             <div
