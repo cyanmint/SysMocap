@@ -43,6 +43,27 @@
             ::-webkit-scrollbar {
                 display: none;
             }
+            
+            /* Responsive container for camera preview that adapts to aspect ratio */
+            .preview {
+                position: fixed;
+                top: 10px;
+                left: 10px;
+                right: 10px;
+                max-height: calc(100vh - 20px);
+                display: flex;
+                justify-content: center;
+                align-items: flex-start;
+            }
+            
+            .preview video,
+            .preview canvas {
+                max-width: 100%;
+                max-height: calc(100vh - 20px);
+                width: auto;
+                height: auto;
+                object-fit: contain;
+            }
         </style>
     </head>
 
@@ -52,14 +73,10 @@
             <canvas
                 class="guides"
                 style="
-                    width: calc(100% - 20px);
                     border: solid 1px #ccc;
                     border-radius: 10px;
-                    height: auto;
                     overflow: hidden;
-                    position: fixed;
-                    top: 10px;
-                    left: 10px;
+                    position: absolute;
                     z-index: 1000;
                     pointer-events: none;
                     transform: scale(-1, 1);
@@ -70,14 +87,9 @@
                 class="input_video"
                 muted
                 style="
-                    width: calc(100% - 20px);
                     border: solid 1px #ccc;
                     border-radius: 10px;
-                    height: auto;
                     overflow: hidden;
-                    position: fixed;
-                    top: 10px;
-                    left: 10px;
                     transform: scale(-1, 1);
                 "
             ></video>

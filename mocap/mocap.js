@@ -240,8 +240,14 @@ const drawResults = (results) => {
 
 // switch use camera or video file
 if (localStorage.getItem("useCamera") == "camera") {
+    // Get camera constraints - allow mobile cameras to use their native resolution
+    const cameraId = localStorage.getItem("cameraId");
+    const videoConstraints = cameraId 
+        ? { deviceId: cameraId } 
+        : { facingMode: 'user' }; // Default to front camera on mobile
+    
     navigator.mediaDevices
-        .getUserMedia({ video: { deviceId: localStorage.getItem("cameraId"),width: 1280, height: 720 } })
+        .getUserMedia({ video: videoConstraints })
         .then(function (stream) {
             videoElement.srcObject = stream;
             videoElement.play();

@@ -589,23 +589,41 @@ if (typeof require != "undefined" && !isBrowserMode) {
         },
     });
 
-    navigator.mediaDevices.enumerateDevices().then((mediaDevices) => {
-        var lastChoosed = localStorage.getItem("last-choosed-camera");
-        for (var mediaDevice of mediaDevices)
-            if (mediaDevice.kind === "videoinput") {
-                app.cameras.push({
-                    id: mediaDevice.deviceId,
-                    label: mediaDevice.label,
-                });
-            }
-        if (app.cameras?.length > 0) app.camera = app.cameras[0].id;
-        if (lastChoosed) {
-            if (app.cameras?.find((e) => e.id == lastChoosed)) {
-                app.camera = lastChoosed;
-            }
+    // Request camera permission first (especially important on Android)
+    // This will trigger the permission prompt on mobile devices
+    const requestCameraPermission = async () => {
+        try {
+            // Request camera access to trigger permission prompt
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            // Stop the stream immediately as we just needed to get permission
+            stream.getTracks().forEach(track => track.stop());
+            return true;
+        } catch (error) {
+            console.warn('Camera permission not granted:', error);
+            return false;
         }
-        app.$nextTick(() => {
-            new mdui.Select("#demo-js-3");
+    };
+
+    // First request permission, then enumerate devices
+    requestCameraPermission().then(() => {
+        navigator.mediaDevices.enumerateDevices().then((mediaDevices) => {
+            var lastChoosed = localStorage.getItem("last-choosed-camera");
+            for (var mediaDevice of mediaDevices)
+                if (mediaDevice.kind === "videoinput") {
+                    app.cameras.push({
+                        id: mediaDevice.deviceId,
+                        label: mediaDevice.label,
+                    });
+                }
+            if (app.cameras?.length > 0) app.camera = app.cameras[0].id;
+            if (lastChoosed) {
+                if (app.cameras?.find((e) => e.id == lastChoosed)) {
+                    app.camera = lastChoosed;
+                }
+            }
+            app.$nextTick(() => {
+                new mdui.Select("#demo-js-3");
+            });
         });
     });
 
@@ -755,6 +773,12 @@ if (typeof require != "undefined" && !isBrowserMode) {
             input.type = 'file';
             input.style.display = 'none';
             
+            // On Android/mobile, set nwworkingdir to allow file access
+            if (platform === 'android' || /Android/i.test(navigator.userAgent)) {
+                input.setAttribute('nwworkingdir', '');
+                input.setAttribute('nwdirectory', 'false');
+            }
+            
             if (isModelInput) {
                 input.accept = '.vrm,.glb,.gltf,.fbx';
                 input.onchange = window.handleModelFileSelect;
@@ -768,7 +792,9 @@ if (typeof require != "undefined" && !isBrowserMode) {
             
             // Clean up after selection
             setTimeout(() => {
-                document.body.removeChild(input);
+                if (document.body.contains(input)) {
+                    document.body.removeChild(input);
+                }
             }, 1000);
         } else {
             // Browser/Electron mode - use existing input
@@ -1220,15 +1246,28 @@ if (typeof require != "undefined" && !isBrowserMode) {
             };
         }
         
-        // Get cameras
-        navigator.mediaDevices.enumerateDevices().then((devices) => {
-            var cameras = devices.filter((e) => e.kind == "videoinput");
-            app.cameras = cameras.map((e) => ({ label: e.label, id: e.deviceId }));
-            
-            const lastChoosed = localStorage.getItem("camera");
-            if (app.cameras?.find((e) => e.id == lastChoosed)) {
-                app.camera = lastChoosed;
+        // Get cameras - request permission first on mobile/browser
+        const requestCameraPermission = async () => {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                stream.getTracks().forEach(track => track.stop());
+                return true;
+            } catch (error) {
+                console.warn('Camera permission not granted:', error);
+                return false;
             }
+        };
+
+        requestCameraPermission().then(() => {
+            navigator.mediaDevices.enumerateDevices().then((devices) => {
+                var cameras = devices.filter((e) => e.kind == "videoinput");
+                app.cameras = cameras.map((e) => ({ label: e.label, id: e.deviceId }));
+                
+                const lastChoosed = localStorage.getItem("camera");
+                if (app.cameras?.find((e) => e.id == lastChoosed)) {
+                    app.camera = lastChoosed;
+                }
+            });
         });
         
         app.$nextTick(() => {

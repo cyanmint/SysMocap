@@ -611,6 +611,9 @@ button {
         overflow: hidden !important;
         text-overflow: ellipsis !important;
         white-space: nowrap !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
     }
     
     .tab-bar label .material-icons-outlined,
@@ -619,11 +622,27 @@ button {
         vertical-align: middle !important;
         margin-top: 0 !important;
         margin-right: 2px !important;
+        flex-shrink: 0 !important;
     }
     
     .tab-bar .tab-text {
         font-size: 9px !important;
         vertical-align: middle !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+    
+    /* Hide text labels on very small screens (< 360px) */
+    @media (max-width: 360px) {
+        .tab-bar .tab-text {
+            display: none !important;
+        }
+        
+        .tab-bar label .material-icons-outlined,
+        .tab-bar label .material-icons {
+            margin-right: 0 !important;
+        }
     }
     
     .tab-bar .tab-bar-indicator {
