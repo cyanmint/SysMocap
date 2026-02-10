@@ -568,6 +568,11 @@ button {
     top: 0 !important;
 }
 
+/* Desktop: mocap controls container */
+.mocap-controls-container {
+    width: 750px;
+}
+
 /* Mobile responsive layout */
 @media (max-width: 768px) {
     /* Prevent horizontal scrolling */
@@ -585,26 +590,41 @@ button {
         right: 10px !important;
         height: 28px !important;
         top: 8px !important;
+        box-sizing: border-box !important;
+    }
+    
+    .tab-bar-buttons {
+        display: flex !important;
+        justify-content: space-between !important;
+        width: 100% !important;
     }
     
     .tab-bar label {
         width: calc(33.333% - 4px) !important;
-        font-size: 11px !important;
-        padding: 0 2px !important;
+        max-width: calc(33.333% - 4px) !important;
+        font-size: 10px !important;
+        padding: 0 1px !important;
         height: 26px !important;
         line-height: 26px !important;
         margin-top: 1px !important;
+        margin-left: 2px !important;
+        margin-right: 2px !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
     }
     
     .tab-bar label .material-icons-outlined,
     .tab-bar label .material-icons {
-        font-size: 16px !important;
+        font-size: 14px !important;
         vertical-align: middle !important;
         margin-top: 0 !important;
+        margin-right: 2px !important;
     }
     
     .tab-bar .tab-text {
-        font-size: 10px !important;
+        font-size: 9px !important;
         vertical-align: middle !important;
     }
     
@@ -641,7 +661,8 @@ button {
     }
     
     /* Mocap page controls - position lower on mobile */
-    #vue-mount > div[v-show="tab=='render'"] > div {
+    #vue-mount > div[v-show="tab=='render'"] > div,
+    .mocap-controls-container {
         width: 100% !important;
         max-width: 100% !important;
         padding: 0 10px !important;
@@ -650,7 +671,8 @@ button {
     }
     
     /* Stack mocap controls vertically on mobile */
-    #vue-mount > div[v-show="tab=='render'"] > div > * {
+    #vue-mount > div[v-show="tab=='render'"] > div > *,
+    .mocap-controls-container > * {
         display: block !important;
         width: 100% !important;
         max-width: 100% !important;
@@ -658,18 +680,21 @@ button {
         box-sizing: border-box !important;
     }
     
-    #vue-mount > div[v-show="tab=='render'"] > div > select {
+    #vue-mount > div[v-show="tab=='render'"] > div > select,
+    .mocap-controls-container > select {
         width: 100% !important;
         max-width: 100% !important;
     }
     
-    #vue-mount > div[v-show="tab=='render'"] > div > span {
+    #vue-mount > div[v-show="tab=='render'"] > div > span,
+    .mocap-controls-container > span {
         display: block !important;
         margin: 5px 0 !important;
         margin-left: 0 !important;
     }
     
-    #vue-mount > div[v-show="tab=='render'"] > div > button {
+    #vue-mount > div[v-show="tab=='render'"] > div > button,
+    .mocap-controls-container > button {
         width: 100% !important;
         max-width: 100% !important;
     }

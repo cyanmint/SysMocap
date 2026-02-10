@@ -323,7 +323,7 @@
             -->
 
             <div v-show="tab=='render'">
-                <div style="width: 750px; margin: auto">
+                <div class="mocap-controls-container" style="margin: auto">
                     {{language.tabMocap.chooseModel}}<select class="mdui-select" id="demo-js" v-model="selectModel" style="padding-left: 8px;width: 220px;font-size: 14px;">
                         <optgroup v-bind:label="language.tabModelLib.userModel">
                             <option v-for="model in userModels" v-bind:value="JSON.stringify(model)">
