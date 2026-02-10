@@ -55,7 +55,12 @@ jobs:
         run: |
           mkdir -p ../OutApp/nw
           # Build with package.json as source (creates base package)
-          npx nw-builder --mode=build --version=latest --flavor=normal --arch=x64 --platform=${{ matrix.platform }} --outDir=../OutApp/nw package.json
+          # For macOS, add LSApplicationCategoryType argument
+          if [ "${{ matrix.platform }}" = "osx" ]; then
+            npx nw-builder --mode=build --version=latest --flavor=normal --arch=x64 --platform=${{ matrix.platform }} --outDir=../OutApp/nw --app.LSApplicationCategoryType="public.app-category.graphics-design" package.json
+          else
+            npx nw-builder --mode=build --version=latest --flavor=normal --arch=x64 --platform=${{ matrix.platform }} --outDir=../OutApp/nw package.json
+          fi
           # Copy all necessary files into the package
           cp -r node_modules ../OutApp/nw/package.nw/
           cp -r mainview ../OutApp/nw/package.nw/
