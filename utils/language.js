@@ -66,6 +66,11 @@ const languageData = {
                     orientation: "输出方向",
                     portrait: "竖屏（4:3）",
                     landscape: "横屏（16:9）",
+                    viewportSize: "输出画面大小",
+                    viewportSmall: "小 (480p)",
+                    viewportMedium: "中 (720p)",
+                    viewportLarge: "大 (1080p)",
+                    viewportFull: "全屏",
                     bgPicPath: "背景图片（点击更换）",
                 },
                 performance: {
@@ -200,6 +205,11 @@ const languageData = {
                     orientation: "Output Orientation",
                     portrait: "Portrait (4:3)",
                     landscape: "Landscape (16:9)",
+                    viewportSize: "Output Viewport Size",
+                    viewportSmall: "Small (480p)",
+                    viewportMedium: "Medium (720p)",
+                    viewportLarge: "Large (1080p)",
+                    viewportFull: "Full Screen",
                     bgPicPath: "Background Picture (click to change)",
                 },
                 forward: {

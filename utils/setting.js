@@ -120,6 +120,7 @@ function getSettings() {
                 bgColor: "#ffffff",
                 bgPicPath: "",
                 orientation: "landscape",
+                viewportSize: "medium",
             },
             forward: {
                 enableForwarding: false,

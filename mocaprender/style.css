@@ -39,6 +39,33 @@
     white-space: nowrap;
 }
 
+/* Viewport size classes - desktop only */
+@media (min-width: 769px) {
+    body.viewport-small #model {
+        max-width: 640px;
+        max-height: 480px;
+    }
+    
+    body.viewport-medium #model {
+        max-width: 1280px;
+        max-height: 720px;
+    }
+    
+    body.viewport-large #model {
+        max-width: 1920px;
+        max-height: 1080px;
+    }
+    
+    body.viewport-full #model {
+        width: 100vw !important;
+        height: 100vh !important;
+        max-width: none !important;
+        max-height: none !important;
+        top: 0 !important;
+        left: 0 !important;
+    }
+}
+
 /* Mobile-friendly layout: responsive output with camera preview */
 @media (max-width: 768px) {
     body {
@@ -126,12 +153,17 @@
     }
 }
 
-/* Force portrait mode (when setting is portrait) */
+/* Force portrait mode (when setting is portrait) - applies to all screen sizes */
+body.force-portrait #model {
+    aspect-ratio: 3/4 !important;
+}
+
 @media (max-width: 768px) {
     body.force-portrait #model {
         width: calc(100vw - 20px) !important;
         height: calc(60vh - 20px) !important;
         max-height: none !important;
+        aspect-ratio: auto !important;
     }
     
     body.force-portrait .preview .guides,
@@ -146,12 +178,17 @@
     }
 }
 
-/* Force landscape mode (when setting is landscape) */
+/* Force landscape mode (when setting is landscape) - applies to all screen sizes */
+body.force-landscape #model {
+    aspect-ratio: 16/9 !important;
+}
+
 @media (max-width: 768px) {
     body.force-landscape #model {
         width: calc(100vw - 20px) !important;
         height: calc(65vh - 20px) !important;
         max-height: none !important;
+        aspect-ratio: auto !important;
     }
     
     body.force-landscape .preview .guides,

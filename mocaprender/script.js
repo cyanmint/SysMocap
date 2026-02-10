@@ -35,13 +35,15 @@ import { VRMLoaderPlugin, VRMUtils } from "@pixiv/three-vrm";
 
 // set theme
 const orientationClass = globalSettings.output.orientation === 'portrait' ? ' force-portrait' : ' force-landscape';
+const viewportSizeClass = ' viewport-' + (globalSettings.output.viewportSize || 'medium');
 document.body.setAttribute(
     "class",
     "mdui-theme-layout-auto mdui-theme-primary-" +
         globalSettings.ui.themeColor +
         " mdui-theme-accent-" +
         globalSettings.ui.themeColor +
-        orientationClass
+        orientationClass +
+        viewportSizeClass
 );
 
 // import mocap web server
@@ -879,13 +881,32 @@ function toggleFullscreen() {
             modelElem.msRequestFullscreen();
         }
         
-        // Style adjustments for fullscreen model
+        // Style adjustments for fullscreen model - fill actual viewport
         modelElem.style.width = '100vw';
         modelElem.style.height = '100vh';
         modelElem.style.top = '0';
         modelElem.style.left = '0';
         modelElem.style.border = 'none';
         modelElem.style.borderRadius = '0';
+        modelElem.style.position = 'fixed';
+        
+        // Respect orientation setting in fullscreen
+        const orientation = globalSettings.output.orientation;
+        if (orientation === 'portrait') {
+            // For portrait, maintain 3:4 aspect ratio centered
+            modelElem.style.width = 'auto';
+            modelElem.style.height = '100vh';
+            modelElem.style.aspectRatio = '3/4';
+            modelElem.style.left = '50%';
+            modelElem.style.transform = 'translateX(-50%)';
+        } else {
+            // For landscape, maintain 16:9 aspect ratio centered
+            modelElem.style.width = '100vw';
+            modelElem.style.height = 'auto';
+            modelElem.style.aspectRatio = '16/9';
+            modelElem.style.top = '50%';
+            modelElem.style.transform = 'translateY(-50%)';
+        }
         
         if (icon) icon.textContent = 'fullscreen_exit';
     } else {
@@ -922,6 +943,9 @@ function restoreModelStyles() {
         modelElem.style.left = '';
         modelElem.style.border = '';
         modelElem.style.borderRadius = '';
+        modelElem.style.position = '';
+        modelElem.style.aspectRatio = '';
+        modelElem.style.transform = '';
     }
     if (previewElem) previewElem.style.display = '';
     if (controllerElem) controllerElem.style.display = '';
