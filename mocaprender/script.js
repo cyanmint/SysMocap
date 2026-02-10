@@ -888,19 +888,21 @@ function toggleFullscreen() {
 
 window.toggleFullscreen = toggleFullscreen;
 
+// Update fullscreen icon based on current state
+function updateFullscreenIcon() {
+    const icon = document.getElementById('fullscreen-icon');
+    if (!icon) return;
+    
+    const isFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement || 
+                            document.mozFullScreenElement || document.msFullscreenElement);
+    icon.textContent = isFullscreen ? 'fullscreen_exit' : 'fullscreen';
+}
+
 // Listen for fullscreen changes to update the icon
-document.addEventListener('fullscreenchange', () => {
-    const icon = document.getElementById('fullscreen-icon');
-    if (icon) {
-        icon.textContent = document.fullscreenElement ? 'fullscreen_exit' : 'fullscreen';
-    }
-});
-document.addEventListener('webkitfullscreenchange', () => {
-    const icon = document.getElementById('fullscreen-icon');
-    if (icon) {
-        icon.textContent = document.webkitFullscreenElement ? 'fullscreen_exit' : 'fullscreen';
-    }
-});
+document.addEventListener('fullscreenchange', updateFullscreenIcon);
+document.addEventListener('webkitfullscreenchange', updateFullscreenIcon);
+document.addEventListener('mozfullscreenchange', updateFullscreenIcon);
+document.addEventListener('msfullscreenchange', updateFullscreenIcon);
 
 // keyborad control camera position
 document.addEventListener("keydown", (event) => {

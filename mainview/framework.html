@@ -197,7 +197,7 @@
                     v-bind:style="{height:showModelImporter?'130px':'0px',marginBottom:showModelImporter?'10px':'0px'}">
                     <div id="drag-area" style="background-size: cover; cursor: pointer"
                         v-bind:style="{width:showModelImporter==2?'calc(45% - 18px)':'calc(100% - 36px)',background:modelImporterImg==''?'':'url('+modelImporterImg+') no-repeat center center',backgroundSize:modelImporterImg==''?'':'cover'}"
-                        onclick="document.getElementById(app.showModelImporter==1?'modelFileInput':'imageFileInput').click()">
+                        onclick="window.handleDragAreaClick()">
                         <div
                             v-bind:style="{marginLeft:showModelImporter==2?'8px':'40px',marginTop:showModelImporter==2?'38px':'20px'}">
                             <p v-show="showModelImporter==1">
@@ -205,7 +205,7 @@
                             </p>
                             <p v-show="showModelImporter==1">
                                 {{language.tabModelLib.suppotFormat}}
-                                <a href="#" onclick="ipcRenderer.send('openDocument'); event.stopPropagation()">{{language.tabModelLib.here}}</a>
+                                <a href="#" onclick="window.handleDocumentLinkClick(event)">{{language.tabModelLib.here}}</a>
                             </p>
                             <p v-show="showModelImporter==2&&modelImporterImg==''">
                                 {{language.tabModelLib.clickOrDragImage}}

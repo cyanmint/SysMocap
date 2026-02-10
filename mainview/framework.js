@@ -659,8 +659,8 @@ if (typeof require != "undefined" && !isBrowserMode) {
         // console.log(filePath);
         var strs1 = filePath.split("/");
         var name_ = strs1[strs1.length - 1];
-        var name = name_.substr(0, name_.lastIndexOf("."));
-        var type = name_.substr(name_.lastIndexOf(".") + 1);
+        var name = name_.substring(0, name_.lastIndexOf("."));
+        var type = name_.substring(name_.lastIndexOf(".") + 1);
         if (app.showModelImporter == 1) {
             app.modelImporterName = name;
             app.modelImporterType = type;
@@ -672,20 +672,26 @@ if (typeof require != "undefined" && !isBrowserMode) {
     };
 
     // Handle file selection from file input (click-to-add functionality)
+    // Helper function to extract file name and extension
+    function getFileNameAndExtension(fileName) {
+        const lastDotIndex = fileName.lastIndexOf(".");
+        const name = fileName.substring(0, lastDotIndex);
+        const extension = fileName.substring(lastDotIndex + 1);
+        return { name, extension };
+    }
+    
     window.handleModelFileSelect = function(event) {
         const file = event.target.files[0];
         if (!file) return;
+        
+        const { name, extension } = getFileNameAndExtension(file.name);
         
         // In browser mode, use the File object directly
         if (window.isBrowserMode) {
             const reader = new FileReader();
             reader.onload = function(e) {
-                const name_ = file.name;
-                const name = name_.substr(0, name_.lastIndexOf("."));
-                const type = name_.substr(name_.lastIndexOf(".") + 1);
-                
                 app.modelImporterName = name;
-                app.modelImporterType = type;
+                app.modelImporterType = extension;
                 app.modelImporterPath = e.target.result; // Use data URL in browser mode
                 app.showModelImporter = 2;
             };
@@ -693,12 +699,9 @@ if (typeof require != "undefined" && !isBrowserMode) {
         } else {
             // In Electron/NW.js mode, use file path
             const filePath = file.path.replaceAll("\\", "/");
-            const name_ = file.name;
-            const name = name_.substr(0, name_.lastIndexOf("."));
-            const type = name_.substr(name_.lastIndexOf(".") + 1);
             
             app.modelImporterName = name;
-            app.modelImporterType = type;
+            app.modelImporterType = extension;
             app.modelImporterPath = filePath;
             app.showModelImporter = 2;
         }
@@ -726,6 +729,20 @@ if (typeof require != "undefined" && !isBrowserMode) {
         
         // Reset file input
         event.target.value = '';
+    };
+
+    // Handle click on drag area to trigger file input
+    window.handleDragAreaClick = function() {
+        const inputId = app.showModelImporter == 1 ? 'modelFileInput' : 'imageFileInput';
+        document.getElementById(inputId).click();
+    };
+
+    // Handle click on document link with event stop propagation
+    window.handleDocumentLinkClick = function(event) {
+        event.stopPropagation();
+        if (typeof ipcRenderer !== 'undefined') {
+            ipcRenderer.send('openDocument');
+        }
     };
 
     // find by name in app.userModels
