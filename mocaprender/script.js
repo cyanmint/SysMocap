@@ -952,8 +952,8 @@ function matchViewportToVideo() {
     const videoAspect = videoWidth / videoHeight;
     
     // Update the model viewport to match video aspect ratio
-    // Remove any forced aspect ratio from settings
-    modelElem.style.aspectRatio = `${videoWidth} / ${videoHeight}`;
+    // Use setProperty with priority to override CSS classes
+    modelElem.style.setProperty('aspect-ratio', `${videoWidth} / ${videoHeight}`, 'important');
     
     // Update camera aspect ratio
     orbitCamera.aspect = videoAspect;
@@ -962,7 +962,7 @@ function matchViewportToVideo() {
     // Resize renderer
     resizeRendererToContainer();
     
-    console.log(`Matched viewport to video: ${videoWidth}x${videoHeight} (${videoAspect.toFixed(2)})`);
+    console.log(`Matched viewport to video: ${videoWidth}x${videoHeight} (aspect: ${videoAspect.toFixed(2)})`);
 }
 
 // Expose to window for external calls
