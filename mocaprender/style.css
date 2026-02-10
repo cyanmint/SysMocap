@@ -47,7 +47,7 @@
     
     #model {
         width: calc(100vw - 20px) !important;
-        height: calc(100vh - 40vh - 30px) !important;
+        height: calc(60vh - 20px) !important;
         top: 10px !important;
         left: 10px !important;
         position: fixed !important;
@@ -57,9 +57,9 @@
     .preview .input_video {
         width: calc(50% - 15px) !important;
         height: auto !important;
-        max-height: 35vh !important;
-        top: auto !important;
-        bottom: 10px !important;
+        max-height: calc(35vh - 20px) !important;
+        top: calc(60vh + 10px) !important;
+        bottom: auto !important;
         left: 10px !important;
         position: fixed !important;
     }
@@ -69,8 +69,8 @@
     }
     
     #controller {
-        bottom: auto !important;
-        top: calc(100vh - 35vh - 50px) !important;
+        bottom: 10px !important;
+        top: auto !important;
         right: 10px !important;
         z-index: 1001 !important;
     }
@@ -90,12 +90,19 @@
 @media (max-width: 768px) and (orientation: portrait) {
     body:not(.force-landscape) #model {
         width: calc(100vw - 20px) !important;
-        height: calc(100vh - 35vh - 30px) !important;
+        height: calc(60vh - 20px) !important;
         max-height: none !important;
     }
     
+    body:not(.force-landscape) .preview .guides,
+    body:not(.force-landscape) .preview .input_video {
+        top: calc(60vh + 10px) !important;
+        max-height: calc(35vh - 20px) !important;
+    }
+    
     body:not(.force-landscape) #controller {
-        top: calc(100vh - 35vh - 50px) !important;
+        bottom: 10px !important;
+        top: auto !important;
     }
 }
 
@@ -103,17 +110,19 @@
 @media (max-width: 768px) and (orientation: landscape) {
     body:not(.force-portrait) #model {
         width: calc(100vw - 20px) !important;
-        height: calc(100vh - 30vh - 30px) !important;
+        height: calc(65vh - 20px) !important;
         max-height: none !important;
     }
     
     body:not(.force-portrait) .preview .guides,
     body:not(.force-portrait) .preview .input_video {
-        max-height: 25vh !important;
+        top: calc(65vh + 10px) !important;
+        max-height: calc(30vh - 20px) !important;
     }
     
     body:not(.force-portrait) #controller {
-        top: calc(100vh - 30vh - 50px) !important;
+        bottom: 10px !important;
+        top: auto !important;
     }
 }
 
@@ -121,12 +130,19 @@
 @media (max-width: 768px) {
     body.force-portrait #model {
         width: calc(100vw - 20px) !important;
-        height: calc(100vh - 35vh - 30px) !important;
+        height: calc(60vh - 20px) !important;
         max-height: none !important;
     }
     
+    body.force-portrait .preview .guides,
+    body.force-portrait .preview .input_video {
+        top: calc(60vh + 10px) !important;
+        max-height: calc(35vh - 20px) !important;
+    }
+    
     body.force-portrait #controller {
-        top: calc(100vh - 35vh - 50px) !important;
+        bottom: 10px !important;
+        top: auto !important;
     }
 }
 
@@ -134,16 +150,18 @@
 @media (max-width: 768px) {
     body.force-landscape #model {
         width: calc(100vw - 20px) !important;
-        height: calc(100vh - 30vh - 30px) !important;
+        height: calc(65vh - 20px) !important;
         max-height: none !important;
     }
     
     body.force-landscape .preview .guides,
     body.force-landscape .preview .input_video {
-        max-height: 25vh !important;
+        top: calc(65vh + 10px) !important;
+        max-height: calc(30vh - 20px) !important;
     }
     
     body.force-landscape #controller {
-        top: calc(100vh - 30vh - 50px) !important;
+        bottom: 10px !important;
+        top: auto !important;
     }
 }
