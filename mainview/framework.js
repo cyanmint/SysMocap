@@ -762,10 +762,9 @@ if (typeof require != "undefined" && !isBrowserMode) {
             
             // On Android/mobile, configure file input for better compatibility
             if (platform === 'android' || /Android/i.test(navigator.userAgent)) {
-                // Try multiple approaches for Android compatibility
-                // 1. Set working directory to external storage
+                // 1. Set working directory to external storage (standard Android path)
                 input.setAttribute('nwworkingdir', '/storage/emulated/0/');
-                // 2. Multiple file types to ensure compatibility
+                // 2. Restrict to single file selection for better compatibility
                 input.multiple = false;
             }
             
