@@ -852,6 +852,9 @@ function changeTarget(target) {
 
 window.changeTarget = changeTarget;
 
+// Delay for fullscreen transition (in milliseconds)
+const FULLSCREEN_TRANSITION_DELAY = 100;
+
 // Helper function to resize renderer to match container dimensions
 function resizeRendererToContainer() {
     const modelElem = document.getElementById('model');
@@ -923,7 +926,7 @@ function toggleFullscreen() {
         // to ensure fullscreen transition is complete
         setTimeout(() => {
             resizeRendererToContainer();
-        }, 100);
+        }, FULLSCREEN_TRANSITION_DELAY);
         
         if (icon) icon.textContent = 'fullscreen_exit';
     } else {
@@ -944,7 +947,7 @@ function toggleFullscreen() {
         // Resize renderer back to normal after a short delay
         setTimeout(() => {
             resizeRendererToContainer();
-        }, 100);
+        }, FULLSCREEN_TRANSITION_DELAY);
         
         if (icon) icon.textContent = 'fullscreen';
     }
@@ -990,7 +993,7 @@ function updateFullscreenIcon() {
         // Resize renderer back to normal after a short delay
         setTimeout(() => {
             resizeRendererToContainer();
-        }, 100);
+        }, FULLSCREEN_TRANSITION_DELAY);
     }
 }
 
