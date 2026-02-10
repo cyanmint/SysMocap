@@ -792,6 +792,12 @@ if (localStorage.getItem("useCamera") == "camera") {
                 matchViewportToVideo();
             }, { once: true });
             
+            // Also try after a short delay to ensure dimensions are available
+            // This handles cases where loadedmetadata fires before dimensions are set
+            setTimeout(() => {
+                matchViewportToVideo();
+            }, 200);
+            
             var videoFrameCallback = async () => {
                 // videoElement.pause()
                 await holistic.send({ image: videoElement });
@@ -819,6 +825,12 @@ if (localStorage.getItem("useCamera") == "camera") {
     videoElement.addEventListener('loadedmetadata', () => {
         matchViewportToVideo();
     }, { once: true });
+    
+    // Also try after a short delay to ensure dimensions are available
+    // This handles cases where loadedmetadata fires before dimensions are set
+    setTimeout(() => {
+        matchViewportToVideo();
+    }, 200);
 
     var videoFrameCallback = async () => {
         // videoElement.pause()
@@ -938,11 +950,24 @@ function updateViewportSettings(orientation, viewportSize) {
 window.updateViewportSettings = updateViewportSettings;
 
 // Function to match viewport aspect ratio to camera/video input
-function matchViewportToVideo() {
+function matchViewportToVideo(retryCount = 0) {
     const videoElement = document.querySelector('.input_video');
     const modelElem = document.getElementById('model');
     
-    if (!videoElement || !modelElem || !videoElement.videoWidth || !videoElement.videoHeight) {
+    if (!videoElement || !modelElem) {
+        console.warn('matchViewportToVideo: video or model element not found');
+        return;
+    }
+    
+    // Check if video dimensions are available
+    if (!videoElement.videoWidth || !videoElement.videoHeight) {
+        // Retry up to 10 times with 100ms delay if dimensions aren't ready yet
+        if (retryCount < 10) {
+            console.log(`matchViewportToVideo: waiting for video dimensions (attempt ${retryCount + 1}/10)`);
+            setTimeout(() => matchViewportToVideo(retryCount + 1), 100);
+        } else {
+            console.warn('matchViewportToVideo: video dimensions not available after 10 retries');
+        }
         return;
     }
     
