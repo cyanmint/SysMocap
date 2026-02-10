@@ -39,6 +39,18 @@
     white-space: nowrap;
 }
 
+/* Desktop layout - side-by-side view */
+@media (min-width: 769px) {
+    #model {
+        width: 48%;
+    }
+    
+    .preview .input_video,
+    .preview .guides {
+        width: 48%;
+    }
+}
+
 /* Viewport size classes - desktop only */
 @media (min-width: 769px) {
     body.viewport-small #model {
