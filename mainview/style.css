@@ -571,17 +571,66 @@ button {
 /* Mobile responsive layout */
 @media (max-width: 768px) {
     /* Prevent horizontal scrolling */
-    body {
+    html, body {
         overflow-x: hidden !important;
         max-width: 100vw !important;
+        width: 100vw !important;
+    }
+    
+    /* Fix tab bar for mobile */
+    .tab-bar {
+        width: calc(100vw - 20px) !important;
+        max-width: calc(100vw - 20px) !important;
+        left: 10px !important;
+        right: 10px !important;
+    }
+    
+    .tab-bar label {
+        width: calc(33.333% - 4px) !important;
+        font-size: 11px !important;
+        padding: 0 2px !important;
+    }
+    
+    .tab-bar .tab-text {
+        font-size: 10px !important;
+    }
+    
+    .tab-bar .tab-bar-indicator {
+        width: calc(33.333% - 6px) !important;
+    }
+    
+    .tab-bar input:nth-child(1):checked ~ .tab-bar-buttons .tab-bar-indicator {
+        left: 3px !important;
+    }
+    
+    .tab-bar input:nth-child(2):checked ~ .tab-bar-buttons .tab-bar-indicator {
+        left: calc(33.333% + 3px) !important;
+    }
+    
+    .tab-bar input:nth-child(3):checked ~ .tab-bar-buttons .tab-bar-indicator {
+        left: calc(66.666% + 3px) !important;
+    }
+    
+    /* Ensure all content containers fit mobile width */
+    #vue-mount {
+        width: 100vw !important;
+        max-width: 100vw !important;
+        overflow-x: hidden !important;
+    }
+    
+    #vue-mount > div {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+        box-sizing: border-box !important;
     }
     
     /* Mocap page controls */
     #vue-mount > div[v-show="tab=='render'"] > div {
         width: 100% !important;
         max-width: 100% !important;
-        padding: 0 10px;
-        box-sizing: border-box;
+        padding: 0 10px !important;
+        box-sizing: border-box !important;
     }
     
     /* Stack mocap controls vertically on mobile */
@@ -590,7 +639,7 @@ button {
         width: 100% !important;
         max-width: 100% !important;
         margin: 10px 0 !important;
-        box-sizing: border-box;
+        box-sizing: border-box !important;
     }
     
     #vue-mount > div[v-show="tab=='render'"] > div > select {
@@ -612,64 +661,58 @@ button {
     /* Model library - ensure items don't overflow */
     .flex-container {
         width: 100% !important;
-        padding: 0 5px !important;
-        box-sizing: border-box;
+        max-width: 100% !important;
+        padding: 0 10px !important;
+        box-sizing: border-box !important;
     }
     
     .model-item-new {
         min-width: calc(100% - 20px) !important;
         max-width: calc(100% - 20px) !important;
-        margin: 8px 5px !important;
+        margin: 8px auto !important;
     }
     
     .model-item {
         min-width: calc(100% - 20px) !important;
         max-width: calc(100% - 20px) !important;
-        margin: 5px !important;
+        margin: 5px auto !important;
     }
     
     /* Settings page layout */
     .model-importer,
     .model-importer-error {
-        width: calc(100% - 30px) !important;
-        max-width: calc(100% - 30px) !important;
-        margin-left: 15px !important;
-        box-sizing: border-box;
+        width: calc(100% - 20px) !important;
+        max-width: calc(100% - 20px) !important;
+        margin-left: 10px !important;
+        margin-right: 10px !important;
+        box-sizing: border-box !important;
     }
     
     /* Settings items */
+    .settings-item {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 0 10px !important;
+        box-sizing: border-box !important;
+    }
+    
     .settings-item label span {
         width: calc(100% - 100px) !important;
         word-wrap: break-word;
-    }
-    
-    /* Tab bar mobile adjustment */
-    .tab-bar {
-        width: calc(100% - 20px) !important;
-        max-width: calc(100% - 20px) !important;
-        left: 10px !important;
-    }
-    
-    .tab-bar label {
-        width: calc(33.33% - 4px) !important;
-        font-size: 12px !important;
-    }
-    
-    .tab-bar .tab-bar-indicator {
-        width: calc(33.33% - 6px) !important;
-    }
-    
-    .tab-bar input:nth-child(2):checked ~ .tab-bar-buttons .tab-bar-indicator {
-        left: calc(33.33% + 3px) !important;
-    }
-    
-    .tab-bar input:nth-child(3):checked ~ .tab-bar-buttons .tab-bar-indicator {
-        left: calc(66.66% + 3px) !important;
     }
     
     /* Ensure no elements cause horizontal overflow */
     h1 {
         max-width: 100% !important;
         word-wrap: break-word;
+        padding: 0 10px !important;
+    }
+    
+    /* Iframe on mocap page */
+    iframe {
+        width: calc(100vw - 20px) !important;
+        max-width: calc(100vw - 20px) !important;
+        margin-left: 10px !important;
+        box-sizing: border-box !important;
     }
 }
