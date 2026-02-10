@@ -46,9 +46,11 @@
     left: 10px;
 }
 
-/* Canvas inside model should maintain its intrinsic size - container will wrap around it */
+/* Canvas fits container width, maintains intrinsic height - container expands to fit */
 #model canvas {
     display: block;
+    width: 100% !important;
+    /* Remove height: auto to let canvas maintain intrinsic dimensions */
 }
 
 .preview .input_video,
