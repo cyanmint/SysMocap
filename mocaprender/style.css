@@ -39,22 +39,30 @@
     white-space: nowrap;
 }
 
+/* Base layout - default positioning for elements */
+#model {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+}
+
+.preview .input_video,
+.preview .guides {
+    position: fixed;
+    top: 10px;
+    height: auto;
+}
+
 /* Desktop layout - side-by-side view */
 @media (min-width: 769px) {
     #model {
         width: 48%;
         height: fit-content;
-        top: 10px;
-        left: 10px;
-        position: fixed;
     }
     
     .preview .input_video,
     .preview .guides {
         width: 48%;
-        height: auto;
-        position: fixed;
-        top: 10px;
         left: 50%;
     }
 }
