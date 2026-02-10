@@ -926,9 +926,11 @@ function resizeRendererToContainer() {
     if (!modelElem) return;
     
     const width = modelElem.clientWidth;
-    const height = modelElem.clientHeight;
+    // Calculate height based on 16:9 aspect ratio, not container height
+    // This allows container to expand to fit canvas
+    const height = (width / 16) * 9;
     
-    // Update renderer size to match container
+    // Update renderer size to match container width and calculated height
     renderer.setSize(width, height);
     
     // Update camera aspect ratio

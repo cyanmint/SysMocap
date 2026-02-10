@@ -46,6 +46,11 @@
     left: 10px;
 }
 
+/* Canvas inside model should maintain its intrinsic size - container will wrap around it */
+#model canvas {
+    display: block;
+}
+
 .preview .input_video,
 .preview .guides {
     position: fixed;
@@ -104,7 +109,7 @@
     #model {
         width: calc(100vw - 20px) !important;
         max-width: calc(100vw - 20px) !important;
-        height: auto !important;
+        height: fit-content !important;
         max-height: calc(60vh - 20px) !important;
         top: 10px !important;
         left: 10px !important;
