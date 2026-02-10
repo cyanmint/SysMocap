@@ -66,24 +66,28 @@
     }
 }
 
-/* Mobile-friendly layout: responsive output with merged camera/skeleton preview */
+/* Mobile-friendly layout: full-width responsive output matching camera input */
 @media (max-width: 768px) {
     body {
         overflow-x: hidden !important;
     }
     
+    /* Model output - fills width and maintains aspect ratio */
     #model {
         width: calc(100vw - 20px) !important;
-        height: calc(60vh - 20px) !important;
+        max-width: calc(100vw - 20px) !important;
+        height: auto !important;
+        max-height: calc(60vh - 20px) !important;
         top: 10px !important;
         left: 10px !important;
         position: fixed !important;
     }
     
-    /* Merged camera and skeleton view - both at same position */
+    /* Camera preview and skeleton overlay - fill width below model output */
     .preview .input_video,
     .preview .guides {
         width: calc(100vw - 20px) !important;
+        max-width: calc(100vw - 20px) !important;
         height: auto !important;
         max-height: calc(35vh - 20px) !important;
         top: calc(60vh + 10px) !important;

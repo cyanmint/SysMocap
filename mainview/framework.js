@@ -504,18 +504,6 @@ if (typeof require != "undefined" && !isBrowserMode) {
                     console.log('Model viewer not available in browser mode, selecting model:', model.name);
                     this.selectModel = JSON.stringify(model);
                 }
-            },
-            onViewportSettingsChange() {
-                // Update viewport settings in mocaprender iframe when settings change
-                const iframeWindow = document.getElementById("foo")?.contentWindow;
-                if (iframeWindow && iframeWindow.updateViewportSettings) {
-                    iframeWindow.updateViewportSettings(
-                        this.settings.output.orientation,
-                        this.settings.output.viewportSize
-                    );
-                }
-                // Save settings
-                saveSettings(this.settings);
             }
         },
         watch: {
@@ -772,10 +760,13 @@ if (typeof require != "undefined" && !isBrowserMode) {
             input.type = 'file';
             input.style.display = 'none';
             
-            // On Android/mobile, set nwworkingdir to allow file access
+            // On Android/mobile, configure file input for better compatibility
             if (platform === 'android' || /Android/i.test(navigator.userAgent)) {
-                input.setAttribute('nwworkingdir', '');
-                input.setAttribute('nwdirectory', 'false');
+                // Try multiple approaches for Android compatibility
+                // 1. Set working directory to external storage
+                input.setAttribute('nwworkingdir', '/storage/emulated/0/');
+                // 2. Multiple file types to ensure compatibility
+                input.multiple = false;
             }
             
             // Create cleanup function to remove input after use
@@ -1215,18 +1206,6 @@ if (typeof require != "undefined" && !isBrowserMode) {
                     // Browser mode - just select the model (can't open external window)
                     console.log('Model viewer not available in browser mode, selecting model:', model.name);
                     this.selectModel = JSON.stringify(model);
-                },
-                onViewportSettingsChange() {
-                    // Update viewport settings in mocaprender iframe when settings change
-                    const iframeWindow = document.getElementById("foo")?.contentWindow;
-                    if (iframeWindow && iframeWindow.updateViewportSettings) {
-                        iframeWindow.updateViewportSettings(
-                            this.settings.output.orientation,
-                            this.settings.output.viewportSize
-                        );
-                    }
-                    // Save settings
-                    saveSettings(this.settings);
                 }
             },
         });

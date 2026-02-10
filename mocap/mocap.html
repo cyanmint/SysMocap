@@ -50,7 +50,7 @@
                 overflow: hidden;
             }
             
-            /* Responsive container for camera preview that adapts to aspect ratio */
+            /* Responsive container for camera preview that fills available width on mobile */
             .preview {
                 position: fixed;
                 top: 10px;
@@ -62,11 +62,11 @@
                 align-items: flex-start;
             }
             
-            /* Video element - maintains aspect ratio */
+            /* Video element - fills width on mobile while maintaining aspect ratio */
             .preview .input_video {
+                width: 100%;
                 max-width: 100%;
                 max-height: 100%;
-                width: auto;
                 height: auto;
                 object-fit: contain;
                 border: solid 1px #ccc;
@@ -80,9 +80,11 @@
              * in mocap.js drawResults() function to ensure proper overlay alignment */
             .preview .guides {
                 position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
                 max-width: 100%;
                 max-height: 100%;
-                width: auto;
                 height: auto;
                 border: solid 1px #ccc;
                 border-radius: 10px;
