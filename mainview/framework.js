@@ -12,6 +12,20 @@ var ipcRenderer = null;
 var remote = null;
 var platform = typeof navigator !== 'undefined' ? (navigator.userAgent.includes('Android') ? 'android' : (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad') ? 'ios' : 'web')) : "web";
 
+// Utility function to request camera permission (triggers permission prompt on mobile)
+const requestCameraPermission = async () => {
+    try {
+        // Request camera access to trigger permission prompt
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        // Stop the stream immediately as we just needed to get permission
+        stream.getTracks().forEach(track => track.stop());
+        return true;
+    } catch (error) {
+        console.warn('Camera permission not granted:', error);
+        return false;
+    }
+};
+
 // Runtime detection - check in safe order
 const isNwjs = (function() {
     try {
@@ -588,21 +602,6 @@ if (typeof require != "undefined" && !isBrowserMode) {
             }
         },
     });
-
-    // Request camera permission first (especially important on Android)
-    // This will trigger the permission prompt on mobile devices
-    const requestCameraPermission = async () => {
-        try {
-            // Request camera access to trigger permission prompt
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-            // Stop the stream immediately as we just needed to get permission
-            stream.getTracks().forEach(track => track.stop());
-            return true;
-        } catch (error) {
-            console.warn('Camera permission not granted:', error);
-            return false;
-        }
-    };
 
     // First request permission, then enumerate devices
     requestCameraPermission().then(() => {
@@ -1247,17 +1246,6 @@ if (typeof require != "undefined" && !isBrowserMode) {
         }
         
         // Get cameras - request permission first on mobile/browser
-        const requestCameraPermission = async () => {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                stream.getTracks().forEach(track => track.stop());
-                return true;
-            } catch (error) {
-                console.warn('Camera permission not granted:', error);
-                return false;
-            }
-        };
-
         requestCameraPermission().then(() => {
             navigator.mediaDevices.enumerateDevices().then((devices) => {
                 var cameras = devices.filter((e) => e.kind == "videoinput");
