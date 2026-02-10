@@ -191,15 +191,15 @@ holistic.setOptions({
 holistic.onResults(onResults);
 
 const drawResults = (results) => {
-    // Set canvas internal dimensions to match its displayed size to prevent stretching
-    // Use offsetWidth/offsetHeight to get the CSS-rendered size
-    const displayWidth = guideCanvas.offsetWidth;
-    const displayHeight = guideCanvas.offsetHeight;
+    // Set canvas to match the video element's actual displayed dimensions
+    // This ensures the skeleton overlay perfectly matches the video size
+    const videoWidth = videoElement.offsetWidth || videoElement.clientWidth;
+    const videoHeight = videoElement.offsetHeight || videoElement.clientHeight;
     
     // Only update canvas dimensions if they changed (to avoid unnecessary redraws)
-    if (guideCanvas.width !== displayWidth || guideCanvas.height !== displayHeight) {
-        guideCanvas.width = displayWidth;
-        guideCanvas.height = displayHeight;
+    if (guideCanvas.width !== videoWidth || guideCanvas.height !== videoHeight) {
+        guideCanvas.width = videoWidth;
+        guideCanvas.height = videoHeight;
     }
     
     let canvasCtx = guideCanvas.getContext("2d");
