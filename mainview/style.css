@@ -587,12 +587,12 @@ button {
     
     .tab-bar label {
         width: calc(33.333% - 4px) !important;
-        font-size: 11px !important;
+        font-size: 12px !important;
         padding: 0 2px !important;
     }
     
     .tab-bar .tab-text {
-        font-size: 10px !important;
+        font-size: 11px !important;
     }
     
     .tab-bar .tab-bar-indicator {
