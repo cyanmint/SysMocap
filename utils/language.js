@@ -63,6 +63,9 @@ const languageData = {
                     antialias: "启用抗锯齿",
                     usePicInsteadOfColor: "使用图片作为背景而不是纯色",
                     bgColor: "背景颜色",
+                    orientation: "输出方向",
+                    portrait: "竖屏（4:3）",
+                    landscape: "横屏（16:9）",
                     bgPicPath: "背景图片（点击更换）",
                 },
                 performance: {
@@ -194,6 +197,9 @@ const languageData = {
                     usePicInsteadOfColor:
                         "Use Picture as Background instead of Color",
                     bgColor: "Background Color",
+                    orientation: "Output Orientation",
+                    portrait: "Portrait (4:3)",
+                    landscape: "Landscape (16:9)",
                     bgPicPath: "Background Picture (click to change)",
                 },
                 forward: {

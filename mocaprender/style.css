@@ -88,31 +88,62 @@
 
 /* Portrait orientation - fill screen vertically */
 @media (max-width: 768px) and (orientation: portrait) {
-    #model {
+    body:not(.force-landscape) #model {
         width: calc(100vw - 20px) !important;
         height: calc(100vh - 35vh - 30px) !important;
         max-height: none !important;
     }
     
-    #controller {
+    body:not(.force-landscape) #controller {
         top: calc(100vh - 35vh - 50px) !important;
     }
 }
 
 /* Landscape orientation - fill screen horizontally */
 @media (max-width: 768px) and (orientation: landscape) {
-    #model {
+    body:not(.force-portrait) #model {
         width: calc(100vw - 20px) !important;
         height: calc(100vh - 30vh - 30px) !important;
         max-height: none !important;
     }
     
-    .preview .guides,
-    .preview .input_video {
+    body:not(.force-portrait) .preview .guides,
+    body:not(.force-portrait) .preview .input_video {
         max-height: 25vh !important;
     }
     
-    #controller {
+    body:not(.force-portrait) #controller {
+        top: calc(100vh - 30vh - 50px) !important;
+    }
+}
+
+/* Force portrait mode (when setting is portrait) */
+@media (max-width: 768px) {
+    body.force-portrait #model {
+        width: calc(100vw - 20px) !important;
+        height: calc(100vh - 35vh - 30px) !important;
+        max-height: none !important;
+    }
+    
+    body.force-portrait #controller {
+        top: calc(100vh - 35vh - 50px) !important;
+    }
+}
+
+/* Force landscape mode (when setting is landscape) */
+@media (max-width: 768px) {
+    body.force-landscape #model {
+        width: calc(100vw - 20px) !important;
+        height: calc(100vh - 30vh - 30px) !important;
+        max-height: none !important;
+    }
+    
+    body.force-landscape .preview .guides,
+    body.force-landscape .preview .input_video {
+        max-height: 25vh !important;
+    }
+    
+    body.force-landscape #controller {
         top: calc(100vh - 30vh - 50px) !important;
     }
 }

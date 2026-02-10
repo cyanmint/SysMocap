@@ -34,12 +34,14 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { VRMLoaderPlugin, VRMUtils } from "@pixiv/three-vrm";
 
 // set theme
+const orientationClass = globalSettings.output.orientation === 'portrait' ? ' force-portrait' : ' force-landscape';
 document.body.setAttribute(
     "class",
     "mdui-theme-layout-auto mdui-theme-primary-" +
         globalSettings.ui.themeColor +
         " mdui-theme-accent-" +
-        globalSettings.ui.themeColor
+        globalSettings.ui.themeColor +
+        orientationClass
 );
 
 // import mocap web server

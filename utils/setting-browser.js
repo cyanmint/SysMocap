@@ -57,6 +57,7 @@ function getSettings() {
                 usePicInsteadOfColor: false,
                 bgColor: "#ffffff",
                 bgPicPath: "",
+                orientation: "landscape",
             },
             forward: {
                 enableForwarding: false,

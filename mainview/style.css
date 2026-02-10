@@ -577,26 +577,41 @@ button {
         width: 100vw !important;
     }
     
-    /* Fix tab bar for mobile */
+    /* Fix tab bar for mobile - single line, smaller size */
     .tab-bar {
         width: calc(100vw - 20px) !important;
         max-width: calc(100vw - 20px) !important;
         left: 10px !important;
         right: 10px !important;
+        height: 28px !important;
+        top: 8px !important;
     }
     
     .tab-bar label {
         width: calc(33.333% - 4px) !important;
-        font-size: 12px !important;
+        font-size: 11px !important;
         padding: 0 2px !important;
+        height: 26px !important;
+        line-height: 26px !important;
+        margin-top: 1px !important;
+    }
+    
+    .tab-bar label .material-icons-outlined,
+    .tab-bar label .material-icons {
+        font-size: 16px !important;
+        vertical-align: middle !important;
+        margin-top: 0 !important;
     }
     
     .tab-bar .tab-text {
-        font-size: 11px !important;
+        font-size: 10px !important;
+        vertical-align: middle !important;
     }
     
     .tab-bar .tab-bar-indicator {
         width: calc(33.333% - 6px) !important;
+        height: 22px !important;
+        top: 3px !important;
     }
     
     .tab-bar input:nth-child(1):checked ~ .tab-bar-buttons .tab-bar-indicator {
@@ -625,11 +640,12 @@ button {
         box-sizing: border-box !important;
     }
     
-    /* Mocap page controls */
+    /* Mocap page controls - position lower on mobile */
     #vue-mount > div[v-show="tab=='render'"] > div {
         width: 100% !important;
         max-width: 100% !important;
         padding: 0 10px !important;
+        padding-top: 50px !important;
         box-sizing: border-box !important;
     }
     
