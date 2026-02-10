@@ -88,7 +88,7 @@ const renderer = new THREE.WebGLRenderer({
 
 // Initial renderer size - will be updated once video loads
 const initialWidth = document.querySelector("#model").clientWidth;
-const initialHeight = (initialWidth / 16) * 9; // Start with 16:9, will adjust when video loads
+const initialHeight = (initialWidth / 9) * 16; // Start with 9:16 (portrait), will adjust when video loads
 renderer.setSize(initialWidth, initialHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
 document.querySelector("#model").appendChild(renderer.domElement);
@@ -928,9 +928,9 @@ function resizeRendererToContainer() {
     
     const width = modelElem.clientWidth;
     
-    // Get aspect ratio from video element if available, otherwise fallback to 16:9
+    // Get aspect ratio from video element if available, otherwise fallback to 9:16 (portrait)
     const videoElement = document.querySelector('.input_video');
-    let aspectRatio = 16 / 9; // Default fallback
+    let aspectRatio = 9 / 16; // Default fallback (portrait for mobile)
     
     if (videoElement && videoElement.videoWidth && videoElement.videoHeight) {
         aspectRatio = videoElement.videoWidth / videoElement.videoHeight;
