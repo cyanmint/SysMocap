@@ -39,6 +39,41 @@
     white-space: nowrap;
 }
 
+/* Base layout - default positioning for elements */
+#model {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+}
+
+/* Canvas fits container width, maintains intrinsic height - container expands to fit */
+#model canvas {
+    display: block;
+    width: 100% !important;
+    /* Remove height: auto to let canvas maintain intrinsic dimensions */
+}
+
+.preview .input_video,
+.preview .guides {
+    position: fixed;
+    top: 10px;
+    height: auto;
+}
+
+/* Desktop layout - side-by-side view */
+@media (min-width: 769px) {
+    #model {
+        width: 48%;
+        height: fit-content;
+    }
+    
+    .preview .input_video,
+    .preview .guides {
+        width: 48%;
+        left: 50%;
+    }
+}
+
 /* Viewport size classes - desktop only */
 @media (min-width: 769px) {
     body.viewport-small #model {
@@ -66,42 +101,71 @@
     }
 }
 
-/* Mobile-friendly layout: responsive output with merged camera/skeleton preview */
+/* Mobile-friendly layout: full-width responsive output matching camera input */
 @media (max-width: 768px) {
     body {
         overflow-x: hidden !important;
     }
     
+    /* Model output - fills width and maintains aspect ratio */
     #model {
         width: calc(100vw - 20px) !important;
-        height: calc(60vh - 20px) !important;
+        max-width: calc(100vw - 20px) !important;
+        height: fit-content !important;
+        max-height: calc(60vh - 20px) !important;
         top: 10px !important;
         left: 10px !important;
+        right: 10px !important;
         position: fixed !important;
     }
     
-    /* Merged camera and skeleton view - both at same position */
-    .preview .input_video,
-    .preview .guides {
-        width: calc(100vw - 20px) !important;
-        height: auto !important;
-        max-height: calc(35vh - 20px) !important;
+    /* Camera preview container - positioned below model */
+    .preview {
+        position: fixed !important;
         top: calc(60vh + 10px) !important;
-        bottom: auto !important;
         left: 10px !important;
-        position: fixed !important;
+        right: 10px !important;
+        bottom: auto !important;
+        width: calc(100vw - 20px) !important;
+        max-height: calc(35vh - 20px) !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: flex-start !important;
     }
     
+    /* Camera preview video - fills container width */
+    .preview .input_video {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: auto !important;
+        max-height: 100% !important;
+        position: relative !important;
+        top: auto !important;
+        left: auto !important;
+        display: block !important;
+        object-fit: contain !important;
+    }
+    
+    /* Skeleton overlay - positioned absolutely over video */
     .preview .guides {
-        z-index: 1001;
-        pointer-events: none;
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        max-width: 100% !important;
+        max-height: 100% !important;
+        z-index: 1001 !important;
+        pointer-events: none !important;
     }
     
     #controller {
         bottom: 10px !important;
         top: auto !important;
         right: 10px !important;
-        z-index: 1001 !important;
+        z-index: 1002 !important;
     }
     
     #controller > div:first-child {

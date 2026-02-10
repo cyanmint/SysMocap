@@ -191,8 +191,17 @@ holistic.setOptions({
 holistic.onResults(onResults);
 
 const drawResults = (results) => {
-    guideCanvas.width = videoElement.videoWidth;
-    guideCanvas.height = videoElement.videoHeight;
+    // Set canvas to match the video element's actual displayed dimensions
+    // This ensures the skeleton overlay perfectly matches the video size
+    const videoWidth = videoElement.offsetWidth || videoElement.clientWidth;
+    const videoHeight = videoElement.offsetHeight || videoElement.clientHeight;
+    
+    // Only update canvas dimensions if they changed (to avoid unnecessary redraws)
+    if (guideCanvas.width !== videoWidth || guideCanvas.height !== videoHeight) {
+        guideCanvas.width = videoWidth;
+        guideCanvas.height = videoHeight;
+    }
+    
     let canvasCtx = guideCanvas.getContext("2d");
     canvasCtx.save();
     canvasCtx.clearRect(0, 0, guideCanvas.width, guideCanvas.height);
@@ -240,8 +249,14 @@ const drawResults = (results) => {
 
 // switch use camera or video file
 if (localStorage.getItem("useCamera") == "camera") {
+    // Get camera constraints - allow mobile cameras to use their native resolution
+    const cameraId = localStorage.getItem("cameraId");
+    const videoConstraints = cameraId 
+        ? { deviceId: cameraId } 
+        : { facingMode: 'user' }; // Default to front camera on mobile
+    
     navigator.mediaDevices
-        .getUserMedia({ video: { deviceId: localStorage.getItem("cameraId"),width: 1280, height: 720 } })
+        .getUserMedia({ video: videoConstraints })
         .then(function (stream) {
             videoElement.srcObject = stream;
             videoElement.play();

@@ -723,36 +723,7 @@
                                 " />
                     </label>
                 </div>
-                <div class="settings-item">
-                    <label>
-                        <span><span class="material-icons-outlined">
-                                screen_rotation </span>{{language.tabSettings.output.orientation}}</span>
-                        <select v-model="settings.output.orientation" @change="onViewportSettingsChange" class="mdui-select" style="
-                                    float: right;
-                                    margin-right: 10px;
-                                    padding: 5px 10px;
-                                ">
-                            <option value="portrait">{{language.tabSettings.output.portrait}}</option>
-                            <option value="landscape">{{language.tabSettings.output.landscape}}</option>
-                        </select>
-                    </label>
-                </div>
-                <div class="settings-item">
-                    <label>
-                        <span><span class="material-icons-outlined">
-                                aspect_ratio </span>{{language.tabSettings.output.viewportSize}}</span>
-                        <select v-model="settings.output.viewportSize" @change="onViewportSettingsChange" class="mdui-select" style="
-                                    float: right;
-                                    margin-right: 10px;
-                                    padding: 5px 10px;
-                                ">
-                            <option value="small">{{language.tabSettings.output.viewportSmall}}</option>
-                            <option value="medium">{{language.tabSettings.output.viewportMedium}}</option>
-                            <option value="large">{{language.tabSettings.output.viewportLarge}}</option>
-                            <option value="full">{{language.tabSettings.output.viewportFull}}</option>
-                        </select>
-                    </label>
-                </div>
+                <!-- Removed orientation and viewport size settings - output now matches camera input aspect ratio -->
                 <div class="settings-item" v-show="settings.output.usePicInsteadOfColor">
                     <span>{{language.tabSettings.output.usePicInsteadOfColor}}</span>
                 </div>

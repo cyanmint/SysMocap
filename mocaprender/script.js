@@ -85,10 +85,11 @@ const renderer = new THREE.WebGLRenderer({
     alpha: true,
     antialias: globalSettings.output.antialias,
 });
-renderer.setSize(
-    document.querySelector("#model").clientWidth,
-    (document.querySelector("#model").clientWidth / 16) * 9
-);
+
+// Initial renderer size - will be updated once video loads
+const initialWidth = document.querySelector("#model").clientWidth;
+const initialHeight = (initialWidth / 9) * 16; // Start with 9:16 (portrait), will adjust when video loads
+renderer.setSize(initialWidth, initialHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
 document.querySelector("#model").appendChild(renderer.domElement);
 
@@ -726,8 +727,17 @@ holistic.setOptions({
 holistic.onResults(onResults);
 
 const drawResults = (results) => {
-    guideCanvas.width = videoElement.videoWidth;
-    guideCanvas.height = videoElement.videoHeight;
+    // Set canvas to match the video element's actual displayed dimensions
+    // This ensures the skeleton overlay perfectly matches the video size
+    const videoWidth = videoElement.offsetWidth || videoElement.clientWidth;
+    const videoHeight = videoElement.offsetHeight || videoElement.clientHeight;
+    
+    // Only update canvas dimensions if they changed (to avoid unnecessary redraws)
+    if (guideCanvas.width !== videoWidth || guideCanvas.height !== videoHeight) {
+        guideCanvas.width = videoWidth;
+        guideCanvas.height = videoHeight;
+    }
+    
     let canvasCtx = guideCanvas.getContext("2d");
     canvasCtx.save();
     canvasCtx.clearRect(0, 0, guideCanvas.width, guideCanvas.height);
@@ -917,13 +927,24 @@ function resizeRendererToContainer() {
     if (!modelElem) return;
     
     const width = modelElem.clientWidth;
-    const height = modelElem.clientHeight;
     
-    // Update renderer size to match container
+    // Get aspect ratio from video element if available, otherwise fallback to 9:16 (portrait)
+    const videoElement = document.querySelector('.input_video');
+    let aspectRatio = 9 / 16; // Default fallback (portrait for mobile)
+    
+    if (videoElement && videoElement.videoWidth && videoElement.videoHeight) {
+        aspectRatio = videoElement.videoWidth / videoElement.videoHeight;
+    }
+    
+    // Calculate height based on video aspect ratio
+    // This allows container to expand to fit canvas while matching camera input
+    const height = width / aspectRatio;
+    
+    // Update renderer size to match container width and calculated height
     renderer.setSize(width, height);
     
     // Update camera aspect ratio
-    orbitCamera.aspect = width / height;
+    orbitCamera.aspect = aspectRatio;
     orbitCamera.updateProjectionMatrix();
 }
 

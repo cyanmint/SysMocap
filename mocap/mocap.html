@@ -43,44 +43,67 @@
             ::-webkit-scrollbar {
                 display: none;
             }
+            
+            body {
+                margin: 0;
+                padding: 0;
+                overflow: hidden;
+            }
+            
+            /* Responsive container for camera preview that fills available width on mobile */
+            .preview {
+                position: fixed;
+                top: 10px;
+                left: 10px;
+                right: 10px;
+                bottom: 10px;
+                display: flex;
+                justify-content: center;
+                align-items: flex-start;
+            }
+            
+            /* Video element - fills width on mobile while maintaining aspect ratio */
+            .preview .input_video {
+                width: 100%;
+                max-width: 100%;
+                max-height: 100%;
+                height: auto;
+                object-fit: contain;
+                border: solid 1px #ccc;
+                border-radius: 10px;
+                overflow: hidden;
+                transform: scale(-1, 1);
+                display: block;
+            }
+            
+            /* Canvas overlay - matches video size and position 
+             * Note: Canvas dimensions are synchronized with video element dimensions
+             * in mocap.js drawResults() function to ensure proper overlay alignment */
+            .preview .guides {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                width: 100%;
+                height: 100%;
+                border: solid 1px #ccc;
+                border-radius: 10px;
+                overflow: hidden;
+                z-index: 1000;
+                pointer-events: none;
+                transform: scale(-1, 1);
+                object-fit: contain;
+            }
         </style>
     </head>
 
     <body>
         <div class="preview">
             <!-- canvas for show body skeleton -->
-            <canvas
-                class="guides"
-                style="
-                    width: calc(100% - 20px);
-                    border: solid 1px #ccc;
-                    border-radius: 10px;
-                    height: auto;
-                    overflow: hidden;
-                    position: fixed;
-                    top: 10px;
-                    left: 10px;
-                    z-index: 1000;
-                    pointer-events: none;
-                    transform: scale(-1, 1);
-                "
-            ></canvas>
+            <canvas class="guides"></canvas>
             <!-- show camera or video input  -->
-            <video
-                class="input_video"
-                muted
-                style="
-                    width: calc(100% - 20px);
-                    border: solid 1px #ccc;
-                    border-radius: 10px;
-                    height: auto;
-                    overflow: hidden;
-                    position: fixed;
-                    top: 10px;
-                    left: 10px;
-                    transform: scale(-1, 1);
-                "
-            ></video>
+            <video class="input_video" muted></video>
         </div>
 
         <script src="../node_modules/kalidokit/dist/kalidokit.umd.js"></script>

@@ -12,6 +12,20 @@ var ipcRenderer = null;
 var remote = null;
 var platform = typeof navigator !== 'undefined' ? (navigator.userAgent.includes('Android') ? 'android' : (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad') ? 'ios' : 'web')) : "web";
 
+// Utility function to request camera permission (triggers permission prompt on mobile)
+const requestCameraPermission = async () => {
+    try {
+        // Request camera access to trigger permission prompt
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        // Stop the stream immediately as we just needed to get permission
+        stream.getTracks().forEach(track => track.stop());
+        return true;
+    } catch (error) {
+        console.warn('Camera permission not granted:', error);
+        return false;
+    }
+};
+
 // Runtime detection - check in safe order
 const isNwjs = (function() {
     try {
@@ -490,18 +504,6 @@ if (typeof require != "undefined" && !isBrowserMode) {
                     console.log('Model viewer not available in browser mode, selecting model:', model.name);
                     this.selectModel = JSON.stringify(model);
                 }
-            },
-            onViewportSettingsChange() {
-                // Update viewport settings in mocaprender iframe when settings change
-                const iframeWindow = document.getElementById("foo")?.contentWindow;
-                if (iframeWindow && iframeWindow.updateViewportSettings) {
-                    iframeWindow.updateViewportSettings(
-                        this.settings.output.orientation,
-                        this.settings.output.viewportSize
-                    );
-                }
-                // Save settings
-                saveSettings(this.settings);
             }
         },
         watch: {
@@ -589,23 +591,26 @@ if (typeof require != "undefined" && !isBrowserMode) {
         },
     });
 
-    navigator.mediaDevices.enumerateDevices().then((mediaDevices) => {
-        var lastChoosed = localStorage.getItem("last-choosed-camera");
-        for (var mediaDevice of mediaDevices)
-            if (mediaDevice.kind === "videoinput") {
-                app.cameras.push({
-                    id: mediaDevice.deviceId,
-                    label: mediaDevice.label,
-                });
+    // First request permission, then enumerate devices
+    requestCameraPermission().then(() => {
+        navigator.mediaDevices.enumerateDevices().then((mediaDevices) => {
+            var lastChoosed = localStorage.getItem("last-choosed-camera");
+            for (var mediaDevice of mediaDevices)
+                if (mediaDevice.kind === "videoinput") {
+                    app.cameras.push({
+                        id: mediaDevice.deviceId,
+                        label: mediaDevice.label,
+                    });
+                }
+            if (app.cameras?.length > 0) app.camera = app.cameras[0].id;
+            if (lastChoosed) {
+                if (app.cameras?.find((e) => e.id == lastChoosed)) {
+                    app.camera = lastChoosed;
+                }
             }
-        if (app.cameras?.length > 0) app.camera = app.cameras[0].id;
-        if (lastChoosed) {
-            if (app.cameras?.find((e) => e.id == lastChoosed)) {
-                app.camera = lastChoosed;
-            }
-        }
-        app.$nextTick(() => {
-            new mdui.Select("#demo-js-3");
+            app.$nextTick(() => {
+                new mdui.Select("#demo-js-3");
+            });
         });
     });
 
@@ -755,21 +760,43 @@ if (typeof require != "undefined" && !isBrowserMode) {
             input.type = 'file';
             input.style.display = 'none';
             
+            // On Android/mobile, configure file input for better compatibility
+            if (platform === 'android' || /Android/i.test(navigator.userAgent)) {
+                // 1. Set working directory to external storage (standard Android path)
+                input.setAttribute('nwworkingdir', '/storage/emulated/0/');
+                // 2. Restrict to single file selection for better compatibility
+                input.multiple = false;
+            }
+            
+            // Create cleanup function to remove input after use
+            const cleanup = () => {
+                if (document.body.contains(input)) {
+                    document.body.removeChild(input);
+                }
+            };
+            
             if (isModelInput) {
                 input.accept = '.vrm,.glb,.gltf,.fbx';
-                input.onchange = window.handleModelFileSelect;
+                const originalHandler = window.handleModelFileSelect;
+                input.onchange = (event) => {
+                    originalHandler(event);
+                    cleanup();
+                };
             } else {
                 input.accept = 'image/*';
-                input.onchange = window.handleImageFileSelect;
+                const originalHandler = window.handleImageFileSelect;
+                input.onchange = (event) => {
+                    originalHandler(event);
+                    cleanup();
+                };
             }
+            
+            // Also cleanup on cancel (when input loses focus without selection)
+            // Use { once: true } to automatically remove listener after first trigger
+            input.addEventListener('cancel', cleanup, { once: true });
             
             document.body.appendChild(input);
             input.click();
-            
-            // Clean up after selection
-            setTimeout(() => {
-                document.body.removeChild(input);
-            }, 1000);
         } else {
             // Browser/Electron mode - use existing input
             const input = document.getElementById(inputId);
@@ -1178,18 +1205,6 @@ if (typeof require != "undefined" && !isBrowserMode) {
                     // Browser mode - just select the model (can't open external window)
                     console.log('Model viewer not available in browser mode, selecting model:', model.name);
                     this.selectModel = JSON.stringify(model);
-                },
-                onViewportSettingsChange() {
-                    // Update viewport settings in mocaprender iframe when settings change
-                    const iframeWindow = document.getElementById("foo")?.contentWindow;
-                    if (iframeWindow && iframeWindow.updateViewportSettings) {
-                        iframeWindow.updateViewportSettings(
-                            this.settings.output.orientation,
-                            this.settings.output.viewportSize
-                        );
-                    }
-                    // Save settings
-                    saveSettings(this.settings);
                 }
             },
         });
@@ -1220,15 +1235,17 @@ if (typeof require != "undefined" && !isBrowserMode) {
             };
         }
         
-        // Get cameras
-        navigator.mediaDevices.enumerateDevices().then((devices) => {
-            var cameras = devices.filter((e) => e.kind == "videoinput");
-            app.cameras = cameras.map((e) => ({ label: e.label, id: e.deviceId }));
-            
-            const lastChoosed = localStorage.getItem("camera");
-            if (app.cameras?.find((e) => e.id == lastChoosed)) {
-                app.camera = lastChoosed;
-            }
+        // Get cameras - request permission first on mobile/browser
+        requestCameraPermission().then(() => {
+            navigator.mediaDevices.enumerateDevices().then((devices) => {
+                var cameras = devices.filter((e) => e.kind == "videoinput");
+                app.cameras = cameras.map((e) => ({ label: e.label, id: e.deviceId }));
+                
+                const lastChoosed = localStorage.getItem("camera");
+                if (app.cameras?.find((e) => e.id == lastChoosed)) {
+                    app.camera = lastChoosed;
+                }
+            });
         });
         
         app.$nextTick(() => {
