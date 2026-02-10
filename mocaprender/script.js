@@ -887,7 +887,7 @@ function toggleFullscreen() {
         
         if (icon) icon.textContent = 'fullscreen_exit';
     } else {
-        // Exit fullscreen - restore preview and controller
+        // Exit fullscreen
         if (document.exitFullscreen) {
             document.exitFullscreen();
         } else if (document.webkitExitFullscreen) {
@@ -899,15 +899,7 @@ function toggleFullscreen() {
         }
         
         // Restore original styles
-        modelElem.style.width = '';
-        modelElem.style.height = '';
-        modelElem.style.top = '';
-        modelElem.style.left = '';
-        modelElem.style.border = '';
-        modelElem.style.borderRadius = '';
-        
-        if (previewElem) previewElem.style.display = '';
-        if (controllerElem) controllerElem.style.display = '';
+        restoreModelStyles();
         
         if (icon) icon.textContent = 'fullscreen';
     }
@@ -915,12 +907,27 @@ function toggleFullscreen() {
 
 window.toggleFullscreen = toggleFullscreen;
 
-// Update fullscreen icon based on current state
-function updateFullscreenIcon() {
-    const icon = document.getElementById('fullscreen-icon');
+// Helper function to restore model styles and show preview/controller
+function restoreModelStyles() {
     const modelElem = document.getElementById('model');
     const previewElem = document.querySelector('.preview');
     const controllerElem = document.getElementById('controller');
+    
+    if (modelElem) {
+        modelElem.style.width = '';
+        modelElem.style.height = '';
+        modelElem.style.top = '';
+        modelElem.style.left = '';
+        modelElem.style.border = '';
+        modelElem.style.borderRadius = '';
+    }
+    if (previewElem) previewElem.style.display = '';
+    if (controllerElem) controllerElem.style.display = '';
+}
+
+// Update fullscreen icon based on current state
+function updateFullscreenIcon() {
+    const icon = document.getElementById('fullscreen-icon');
     
     if (!icon) return;
     
@@ -931,16 +938,7 @@ function updateFullscreenIcon() {
     
     // If exiting fullscreen, restore visibility
     if (!isFullscreen) {
-        if (modelElem) {
-            modelElem.style.width = '';
-            modelElem.style.height = '';
-            modelElem.style.top = '';
-            modelElem.style.left = '';
-            modelElem.style.border = '';
-            modelElem.style.borderRadius = '';
-        }
-        if (previewElem) previewElem.style.display = '';
-        if (controllerElem) controllerElem.style.display = '';
+        restoreModelStyles();
     }
 }
 
