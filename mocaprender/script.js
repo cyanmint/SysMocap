@@ -95,12 +95,7 @@ document.querySelector("#model").appendChild(renderer.domElement);
 window.addEventListener(
     "resize",
     function () {
-        orbitCamera.aspect = 16 / 9;
-        orbitCamera.updateProjectionMatrix();
-        renderer.setSize(
-            document.querySelector("#model").clientWidth,
-            (document.querySelector("#model").clientWidth / 16) * 9
-        );
+        resizeRendererToContainer();
     },
     false
 );
@@ -857,6 +852,22 @@ function changeTarget(target) {
 
 window.changeTarget = changeTarget;
 
+// Helper function to resize renderer to match container dimensions
+function resizeRendererToContainer() {
+    const modelElem = document.getElementById('model');
+    if (!modelElem) return;
+    
+    const width = modelElem.clientWidth;
+    const height = modelElem.clientHeight;
+    
+    // Update renderer size to match container
+    renderer.setSize(width, height);
+    
+    // Update camera aspect ratio
+    orbitCamera.aspect = width / height;
+    orbitCamera.updateProjectionMatrix();
+}
+
 // Fullscreen toggle function - only fullscreens the output model, not the camera
 function toggleFullscreen() {
     const modelElem = document.getElementById('model');
@@ -908,6 +919,12 @@ function toggleFullscreen() {
             modelElem.style.transform = 'translateY(-50%)';
         }
         
+        // Resize renderer to fullscreen dimensions after a short delay
+        // to ensure fullscreen transition is complete
+        setTimeout(() => {
+            resizeRendererToContainer();
+        }, 100);
+        
         if (icon) icon.textContent = 'fullscreen_exit';
     } else {
         // Exit fullscreen
@@ -923,6 +940,11 @@ function toggleFullscreen() {
         
         // Restore original styles
         restoreModelStyles();
+        
+        // Resize renderer back to normal after a short delay
+        setTimeout(() => {
+            resizeRendererToContainer();
+        }, 100);
         
         if (icon) icon.textContent = 'fullscreen';
     }
@@ -962,9 +984,13 @@ function updateFullscreenIcon() {
     
     icon.textContent = isFullscreen ? 'fullscreen_exit' : 'fullscreen';
     
-    // If exiting fullscreen, restore visibility
+    // If exiting fullscreen, restore visibility and resize renderer
     if (!isFullscreen) {
         restoreModelStyles();
+        // Resize renderer back to normal after a short delay
+        setTimeout(() => {
+            resizeRendererToContainer();
+        }, 100);
     }
 }
 
