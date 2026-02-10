@@ -633,7 +633,9 @@ button {
         white-space: nowrap !important;
     }
     
-    /* Hide text labels on very small screens (< 360px) */
+    /* Hide text labels on very small screens (< 360px) 
+     * This breakpoint is chosen because it's below the smallest common mobile device width
+     * (iPhone SE at 375px) where text overflow becomes an issue */
     @media (max-width: 360px) {
         .tab-bar .tab-text {
             display: none !important;

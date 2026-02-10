@@ -75,7 +75,9 @@
                 transform: scale(-1, 1);
             }
             
-            /* Canvas overlay - matches video size and position */
+            /* Canvas overlay - matches video size and position 
+             * Note: Canvas dimensions are synchronized with video element dimensions
+             * in mocap.js drawResults() function to ensure proper overlay alignment */
             .preview .guides {
                 position: absolute;
                 max-width: 100%;

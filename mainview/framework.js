@@ -778,23 +778,34 @@ if (typeof require != "undefined" && !isBrowserMode) {
                 input.setAttribute('nwdirectory', 'false');
             }
             
-            if (isModelInput) {
-                input.accept = '.vrm,.glb,.gltf,.fbx';
-                input.onchange = window.handleModelFileSelect;
-            } else {
-                input.accept = 'image/*';
-                input.onchange = window.handleImageFileSelect;
-            }
-            
-            document.body.appendChild(input);
-            input.click();
-            
-            // Clean up after selection
-            setTimeout(() => {
+            // Create cleanup function to remove input after use
+            const cleanup = () => {
                 if (document.body.contains(input)) {
                     document.body.removeChild(input);
                 }
-            }, 1000);
+            };
+            
+            if (isModelInput) {
+                input.accept = '.vrm,.glb,.gltf,.fbx';
+                const originalHandler = window.handleModelFileSelect;
+                input.onchange = (event) => {
+                    originalHandler(event);
+                    cleanup();
+                };
+            } else {
+                input.accept = 'image/*';
+                const originalHandler = window.handleImageFileSelect;
+                input.onchange = (event) => {
+                    originalHandler(event);
+                    cleanup();
+                };
+            }
+            
+            // Also cleanup on cancel (when input loses focus without selection)
+            input.addEventListener('cancel', cleanup);
+            
+            document.body.appendChild(input);
+            input.click();
         } else {
             // Browser/Electron mode - use existing input
             const input = document.getElementById(inputId);
