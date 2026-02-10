@@ -1,4 +1,4 @@
-module.exports = {
+const languageData = {
     languages: {
         zh: {
             app: {
@@ -241,3 +241,10 @@ module.exports = {
         },
     },
 };
+
+// Support both CommonJS (Node.js/Electron) and browser
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = languageData;
+} else if (typeof window !== 'undefined') {
+    window.languages = languageData.languages;
+}

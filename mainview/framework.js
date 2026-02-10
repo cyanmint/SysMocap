@@ -10,7 +10,197 @@
 
 var ipcRenderer = null;
 var remote = null;
-var platform = "web";
+var platform = typeof navigator !== 'undefined' ? (navigator.userAgent.includes('Android') ? 'android' : (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad') ? 'ios' : 'web')) : "web";
+
+// Runtime detection - check in safe order
+const isNwjs = (function() {
+    try {
+        return typeof nw !== 'undefined' && nw.process;
+    } catch (e) {
+        return false;
+    }
+})();
+const isElectron = typeof process !== 'undefined' && process.versions && process.versions.electron && !isNwjs;
+const isBrowserMode = typeof window !== 'undefined' && !isNwjs && !isElectron;
+
+console.log('[Runtime]', isNwjs ? 'NW.js' : isElectron ? 'Electron' : 'Browser');
+
+// NW.js shim
+if (isNwjs) {
+    // NW.js has direct access to Node.js APIs, but we create shims for compatibility
+    ipcRenderer = {
+        send: function(channel, ...args) {
+            // Use custom events for NW.js IPC
+            window.dispatchEvent(new CustomEvent('ipc-' + channel, { detail: args }));
+        },
+        on: function(channel, callback) {
+            window.addEventListener('ipc-' + channel, (e) => {
+                callback(e, e.detail);
+            });
+        }
+    };
+    
+    remote = {
+        getGlobal: function(name) {
+            if (typeof global !== 'undefined' && global[name]) {
+                return global[name];
+            }
+            if (name === 'appInfo') {
+                return global.appInfo || { appVersion: '0.7.3-nwjs', appName: 'SysMocap NW.js' };
+            }
+            if (name === 'storagePath') {
+                return global.storagePath || { jsonPath: 'sysmocap-nwjs' };
+            }
+            return {};
+        },
+        app: {
+            getGPUInfo: async function() {
+                // Try to get GPU info from WebGL
+                try {
+                    const canvas = document.createElement('canvas');
+                    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                    if (gl) {
+                        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+                        if (debugInfo) {
+                            return {
+                                gpuDevice: [{
+                                    description: gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL)
+                                }]
+                            };
+                        }
+                    }
+                } catch (e) {
+                    console.error('Failed to get GPU info:', e);
+                }
+                return { gpuDevice: [{ description: 'Unknown (NW.js Mode)' }] };
+            }
+        },
+        dialog: {
+            showOpenDialogSync: function(options) {
+                // NW.js has native file dialogs
+                try {
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    if (options && options.properties && options.properties.includes('openFile')) {
+                        input.multiple = false;
+                    }
+                    if (options && options.filters) {
+                        const extensions = options.filters.flatMap(f => f.extensions).map(e => '.' + e);
+                        input.accept = extensions.join(',');
+                    }
+                    // Return a promise-like structure
+                    return new Promise((resolve) => {
+                        input.onchange = (e) => {
+                            const files = Array.from(e.target.files);
+                            resolve(files.length > 0 ? files.map(f => f.path) : null);
+                        };
+                        input.click();
+                    });
+                } catch (e) {
+                    console.error('File dialog error:', e);
+                    return null;
+                }
+            }
+        },
+        getCurrentWindow: function() {
+            if (typeof nwWindow !== 'undefined') {
+                return nwWindow;
+            }
+            return {
+                isMaximized: () => false,
+                restore: () => {},
+                maximize: () => {},
+                close: () => window.close()
+            };
+        },
+        systemPreferences: {
+            getMediaAccessStatus: () => 'granted',
+            askForMediaAccess: async () => true
+        },
+        nativeTheme: {
+            themeSource: 'system'
+        },
+        shell: {
+            openExternal: (url) => {
+                if (typeof nw !== 'undefined' && nw.Shell) {
+                    nw.Shell.openExternal(url);
+                } else {
+                    window.open(url, '_blank');
+                }
+            }
+        }
+    };
+}
+// Browser mode shim
+else if (isBrowserMode) {
+    ipcRenderer = {
+        send: function(channel, ...args) {
+            // Emit custom events for browser mode
+            window.dispatchEvent(new CustomEvent('ipc-' + channel, { detail: args }));
+        },
+        on: function(channel, callback) {
+            window.addEventListener('ipc-' + channel, (e) => {
+                callback(e, e.detail);
+            });
+        }
+    };
+    
+    remote = {
+        getGlobal: function(name) {
+            if (name === 'appInfo') {
+                return { appVersion: '0.7.3-browser', appName: 'SysMocap Browser' };
+            }
+            if (name === 'storagePath') {
+                return { jsonPath: 'sysmocap-browser' };
+            }
+            return {};
+        },
+        app: {
+            getGPUInfo: async function() {
+                // Try to get GPU info from WebGL
+                try {
+                    const canvas = document.createElement('canvas');
+                    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                    if (gl) {
+                        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+                        if (debugInfo) {
+                            return {
+                                gpuDevice: [{
+                                    description: gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL)
+                                }]
+                            };
+                        }
+                    }
+                } catch (e) {
+                    console.error('Failed to get GPU info:', e);
+                }
+                return { gpuDevice: [{ description: 'Unknown (Browser Mode)' }] };
+            }
+        },
+        dialog: {
+            showOpenDialogSync: function(options) {
+                // In browser mode, we need to use file input
+                console.warn('File dialog not available in browser mode. Use file input instead.');
+                return null;
+            }
+        },
+        getCurrentWindow: function() {
+            return {
+                isMaximized: () => false,
+                restore: () => {},
+                maximize: () => {},
+                close: () => window.close()
+            };
+        },
+        systemPreferences: {
+            getMediaAccessStatus: () => 'granted',
+            askForMediaAccess: async () => true
+        },
+        nativeTheme: {
+            themeSource: 'system'
+        }
+    };
+}
 
 var mixamorig = {
     "Hips": {
@@ -163,15 +353,19 @@ function rgba2hex(rgba) {
         : "";
 }
 
-if (typeof require != "undefined") {
-    // import electron remote
-    remote = require("@electron/remote");
-
-    ipcRenderer = require("electron").ipcRenderer;
-
-    const { shell } = require("electron");
-
-    platform = require("os").platform();
+if (typeof require != "undefined" && !isBrowserMode) {
+    // Native mode (Electron or NW.js) - import platform-specific modules
+    if (isElectron) {
+        // Electron mode - import electron remote
+        remote = require("@electron/remote");
+        ipcRenderer = require("electron").ipcRenderer;
+        const { shell } = require("electron");
+    }
+    // For NW.js, remote and ipcRenderer are already shimmed above
+    
+    if (typeof process !== 'undefined') {
+        platform = require("os").platform();
+    }
 
     // import setting utils
     const {
@@ -271,6 +465,32 @@ if (typeof require != "undefined") {
                 e.style.boxShadow = e.computedStyleMap().get('background-color').toString().replace('rgb','rgba').replace(')',', 0.6) 0px 2px 6px')
             }
 
+        },
+        methods: {
+            openModelViewer(model, event) {
+                if (!isBrowserMode) {
+                    // Electron mode - use IPC
+                    const target = event.currentTarget;
+                    const backgroundColor = target.style.getPropertyValue('--md-sys-color-primary-container') || 
+                                          document.body.style.getPropertyValue('--md-sys-color-primary-container');
+                    const color = target.style.getPropertyValue('--md-sys-color-primary') || 
+                                 document.body.style.getPropertyValue('--md-sys-color-primary');
+                    const textColor = target.style.getPropertyValue('--md-sys-color-on-primary-container') || 
+                                     document.body.style.getPropertyValue('--md-sys-color-on-primary-container');
+                    
+                    ipcRenderer.send('openModelViewer', {
+                        model: model,
+                        backgroundColor: backgroundColor,
+                        color: color,
+                        textColor: textColor,
+                        useGlass: this.settings.ui.useGlass
+                    });
+                } else {
+                    // Browser mode - just select the model (can't open external window)
+                    console.log('Model viewer not available in browser mode, selecting model:', model.name);
+                    this.selectModel = JSON.stringify(model);
+                }
+            }
         },
         watch: {
             settings: {
@@ -593,23 +813,335 @@ if (typeof require != "undefined") {
 
     mdui.mutation();
 } else {
-    // todo
+    // Browser mode initialization
+    
+    // Load settings from browser storage
+    const getSettings = () => {
+        try {
+            const settings = localStorage.getItem("sysmocap-global-settings");
+            return settings ? JSON.parse(settings) : null;
+        } catch(e) {
+            return null;
+        }
+    };
+    
+    const getUserModels = () => {
+        try {
+            const models = localStorage.getItem("sysmocap-user-models");
+            return models ? JSON.parse(models) : [];
+        } catch(e) {
+            return [];
+        }
+    };
+    
+    const globalSettings = getSettings() || {
+        ui: {
+            themeColor: "indigo",
+            isDark: false,
+            useGlass: false,
+            language: window.navigator.language.split("-")[0] == "zh" ? "zh" : "en",
+            useNewModelUI: true,
+        },
+        preview: {
+            showSketelonOnInput: true,
+            mirroringWhenCamera: true,
+            mirroringWhenVideoFile: true,
+        },
+        output: {
+            antialias: true,
+            showFPS: true,
+            usePicInsteadOfColor: false,
+            bgColor: "#ffffff",
+            bgPicPath: "",
+        },
+        forward: {
+            enableForwarding: false,
+            port: "8080",
+            useSSL: true,
+            supportForWebXR: "false",
+        },
+        mediapipe: {
+            modelComplexity: "2",
+            smoothLandmarks: true,
+            minDetectionConfidence: "0.7",
+            minTrackingConfidence: "0.7",
+            refineFaceLandmarks: true,
+        },
+        dev: {
+            allowDevTools: false,
+            openDevToolsWhenMocap: false,
+        },
+        performance: {
+            useDgpu: false,
+            GPUs: 0,
+            useDescrertionProcess: false,
+        },
+        valued: true,
+        ver: 0.5,
+    };
+    
+    const saveSettings = (settings) => {
+        try {
+            localStorage.setItem("sysmocap-global-settings", JSON.stringify(settings));
+        } catch(e) {
+            console.error('Failed to save settings:', e);
+        }
+    };
+    
+    const addUserModels = (model) => {
+        const models = getUserModels();
+        models.push(model);
+        try {
+            localStorage.setItem("sysmocap-user-models", JSON.stringify(models));
+        } catch(e) {
+            console.error('Failed to save user models:', e);
+        }
+    };
+    
+    const removeUserModels = (name) => {
+        const models = getUserModels();
+        const index = models.findIndex(e => e.name === name);
+        if (index > -1) {
+            models.splice(index, 1);
+            try {
+                localStorage.setItem("sysmocap-user-models", JSON.stringify(models));
+            } catch(e) {
+                console.error('Failed to remove user model:', e);
+            }
+        }
+    };
+    
+    const userModels = getUserModels();
+    
+    // Load built-in models and languages
+    let builtInModels = [];
+    let languages = window.languages || {};
+    
+    // Load models.json via fetch
+    fetch('../models/models.json')
+        .then(response => response.json())
+        .then(data => {
+            builtInModels = data;
+            initBrowserApp();
+        })
+        .catch(err => {
+            console.error('Failed to load models:', err);
+            builtInModels = [];
+            initBrowserApp();
+        });
+    
+    // Function to initialize Vue app in browser mode
+    function initBrowserApp() {
+        // set theme
+        document.body.setAttribute(
+            "class",
+            "mdui-theme-layout-auto mdui-theme-primary-" +
+                globalSettings.ui.themeColor +
+                " mdui-theme-accent-" +
+                globalSettings.ui.themeColor
+        );
+        
+        var f = async () => {
+            const themeElement = document.querySelector(".mdui-color-theme");
+            if (!themeElement) {
+                console.warn('.mdui-color-theme element not found, skipping theme initialization');
+                return;
+            }
+            var color = window.getComputedStyle(themeElement, null).backgroundColor;
+            var hex = rgba2hex(color);
+            var theme = await themeFromSourceColor(argbFromHex(hex));
+            applyTheme(theme, { target: document.body, dark: darkMode });
+        };
+        f();
+        
+        var app = new Vue({
+            el: "#vue-mount",
+            data: {
+                tab: "model",
+                builtIn: builtInModels,
+                selectModel: localStorage.getItem("selectModel")
+                    ? localStorage.getItem("selectModel")
+                    : (builtInModels.length > 0 ? JSON.stringify(builtInModels[0]) : "{}"),
+                language: languages[globalSettings.ui.language] || languages.en || {},
+                videoSource: "camera",
+                videoPath: "",
+                showModelImporter: 0,
+                modelImporterName: "",
+                modelImporterType: "",
+                modelImporterPath: "",
+                modelImporterImg: "",
+                settings: globalSettings,
+                appVersion: remote.getGlobal("appInfo").appVersion,
+                glRenderer: "Unknown",
+                platform: platform,
+                userModels: JSON.parse(JSON.stringify(userModels)),
+                theme: {},
+                document: document,
+                camera: "",
+                cameras: [],
+                process: { 
+                    platform: platform,
+                    versions: {
+                        electron: 'N/A (Browser)',
+                        node: 'N/A (Browser)'
+                    }
+                },
+                checkingUpdate: false,
+                hasUpdate: null,
+                updateError: null,
+                isLatest: false,
+                disableAutoUpdate: localStorage.getItem('disableUpdate'),
+                showLine: false
+            },
+            computed: {
+                bg: function () {
+                    this.settings.ui.themeColor;
+                    var color = window.getComputedStyle(
+                        document.querySelector(".mdui-color-theme"),
+                        null
+                    ).backgroundColor;
+                    return color;
+                },
+            },
+            mounted() {
+                var modelOnload = async function () {
+                    for (var e of document.querySelectorAll(".my-img")) {
+                        if (e.src.includes("framework.html")) continue;
+                        var theme = await themeFromImage(e);
+                        applyTheme(theme, {
+                            target: e.parentElement,
+                            dark: darkMode,
+                        });
+                    }
+                };
+                if (this.settings.ui.useNewModelUI) modelOnload();
+                for(var e of document.querySelectorAll("div.color-dot")){
+                    e.style.boxShadow = e.computedStyleMap().get('background-color').toString().replace('rgb','rgba').replace(')',', 0.6) 0px 2px 6px')
+                }
+            },
+            watch: {
+                settings: {
+                    handler(newVal, oldVal) {
+                        document.body.setAttribute(
+                            "class",
+                            "mdui-theme-layout-auto mdui-theme-primary-" +
+                                app.settings.ui.themeColor +
+                                " mdui-theme-accent-" +
+                                app.settings.ui.themeColor
+                        );
+                        
+                        saveSettings(app.settings);
+                        
+                        var modelOnload = async function () {
+                            for (var e of document.querySelectorAll(".my-img")) {
+                                if (e.src.includes("framework.html")) continue;
+                                var theme = await themeFromImage(e);
+                                applyTheme(theme, {
+                                    target: e.parentElement,
+                                    dark: app.settings.ui.isDark,
+                                });
+                            }
+                            for(var e of document.querySelectorAll("div.color-dot")){
+                                e.style.boxShadow = e.computedStyleMap().get('background-color').toString().replace('rgb','rgba').replace(')',', 0.6) 0px 2px 6px')
+                            }
+                        };
+                        setTimeout(()=>modelOnload(),500)
+                    },
+                    deep: true,
+                },
+                selectModel: function (val) {
+                    localStorage.setItem("selectModel", val);
+                    localStorage.setItem("modelInfo", val);
+                },
+            },
+            methods: {
+                saveSettings: saveSettings,
+                addUserModels: addUserModels,
+                removeUserModels: removeUserModels,
+                openModelViewer(model, event) {
+                    // Browser mode - just select the model (can't open external window)
+                    console.log('Model viewer not available in browser mode, selecting model:', model.name);
+                    this.selectModel = JSON.stringify(model);
+                }
+            },
+        });
+        
+        window.sysmocapApp = app;
+        
+        // Get GPU info from WebGL
+        remote.app.getGPUInfo("complete").then((info) => {
+            app.glRenderer = info.gpuDevice[0].description;
+        });
+        
+        // Browser file chooser
+        const chooseFileBtn = document.getElementById("chooseFile");
+        if (chooseFileBtn) {
+            chooseFileBtn.onclick = function () {
+                // In browser mode, we'll use HTML5 file input
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = 'video/mp4,video/webm';
+                input.onchange = (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const url = URL.createObjectURL(file);
+                        app.videoPath = url;
+                    }
+                };
+                input.click();
+            };
+        }
+        
+        // Get cameras
+        navigator.mediaDevices.enumerateDevices().then((devices) => {
+            var cameras = devices.filter((e) => e.kind == "videoinput");
+            app.cameras = cameras.map((e) => ({ label: e.label, id: e.deviceId }));
+            
+            const lastChoosed = localStorage.getItem("camera");
+            if (app.cameras?.find((e) => e.id == lastChoosed)) {
+                app.camera = lastChoosed;
+            }
+        });
+        
+        app.$nextTick(() => {
+            new mdui.Select("#demo-js-3");
+        });
+        
+        // Color picking function (browser equivalent)
+        setTimeout(async function () {
+            var themes = [];
+            for (var e of document.querySelectorAll(".my-img")) {
+                if (e.src.includes("framework.html")) continue;
+                var theme = await themeFromImage(e);
+                applyTheme(theme, {
+                    target: e.parentElement,
+                    dark: darkMode,
+                });
+            }
+        }, 500);
+        
+        mdui.mutation();
+    }
 }
 
 var isMocaping = false;
 
 const iframeWindow = document.getElementById("foo").contentWindow;
 
-ipcRenderer.on("sendRenderDataForward", (ev, data) => {
-    if (iframeWindow.onMocapData) iframeWindow.onMocapData(data);
-});
+// IPC listeners - only for Electron mode
+if (ipcRenderer && !isBrowserMode) {
+    ipcRenderer.on("sendRenderDataForward", (ev, data) => {
+        if (iframeWindow.onMocapData) iframeWindow.onMocapData(data);
+    });
 
-ipcRenderer.on("switch-tab", (ev, data) => {
-    window.sysmocapApp.tab = data;
-});
+    ipcRenderer.on("switch-tab", (ev, data) => {
+        window.sysmocapApp.tab = data;
+    });
+}
 
 window.startMocap = async function (e) {
-    if (process.platform == "darwin" && app.videoSource == "camera")
+    // Check camera permissions (Electron only)
+    if (!isBrowserMode && process.platform == "darwin" && window.sysmocapApp.videoSource == "camera")
         if (
             remote.systemPreferences.getMediaAccessStatus("camera") !==
             "granted"
@@ -619,14 +1151,14 @@ window.startMocap = async function (e) {
                 return;
             }
         }
-    if (e.innerHTML.indexOf(app.language.tabMocap.start) != -1) {
+    if (e.innerHTML.indexOf(window.sysmocapApp.language.tabMocap.start) != -1) {
         isMocaping = true;
-        localStorage.setItem("modelInfo", app.selectModel);
-        localStorage.setItem("useCamera", app.videoSource);
-        localStorage.setItem("cameraId", app.camera);
-        localStorage.setItem("videoFile", app.videoPath[0]);
+        localStorage.setItem("modelInfo", window.sysmocapApp.selectModel);
+        localStorage.setItem("useCamera", window.sysmocapApp.videoSource);
+        localStorage.setItem("cameraId", window.sysmocapApp.camera);
+        localStorage.setItem("videoFile", window.sysmocapApp.videoPath[0]);
 
-        if (window.sysmocapApp.settings.performance.useDescrertionProcess) {
+        if (!isBrowserMode && window.sysmocapApp.settings.performance.useDescrertionProcess) {
             const win = remote.getCurrentWindow();
             const bw = win.getBrowserView();
             var winWidth = parseInt(win.getSize()[0]);
@@ -648,10 +1180,10 @@ window.startMocap = async function (e) {
 
         e.innerHTML =
             '<i class="mdui-icon material-icons">stop</i>' +
-            app.language.tabMocap.stop;
+            window.sysmocapApp.language.tabMocap.stop;
     } else {
         isMocaping = false;
-        if (window.sysmocapApp.settings.performance.useDescrertionProcess) {
+        if (!isBrowserMode && window.sysmocapApp.settings.performance.useDescrertionProcess) {
             const win = remote.getCurrentWindow();
             const bw = win.getBrowserView();
             bw.setBounds({ x: 0, y: 0, width: 0, height: 0 });
@@ -659,16 +1191,16 @@ window.startMocap = async function (e) {
         }
         document.getElementById("foo").src = "about:blank";
 
-        if (window.sysmocapApp.settings.forward.enableForwarding)
+        if (!isBrowserMode && window.sysmocapApp.settings.forward.enableForwarding)
             ipcRenderer.send("stopWebServer");
 
         e.innerHTML =
             '<i class="mdui-icon material-icons">play_arrow</i>' +
-            app.language.tabMocap.start;
+            window.sysmocapApp.language.tabMocap.start;
     }
 };
 
-if (window.sysmocapApp.settings.performance.useDescrertionProcess)
+if (!isBrowserMode && window.sysmocapApp.settings.performance.useDescrertionProcess)
     window.addEventListener(
         "resize",
         function () {
@@ -688,48 +1220,55 @@ if (window.sysmocapApp.settings.performance.useDescrertionProcess)
         false
     );
 
-// require modules
-const versionCheck = require("github-version-checker");
+// require modules - Electron only
+if (!isBrowserMode) {
+    const versionCheck = require("github-version-checker");
+    
+    window.checkUpdate = () => {
+        if (window.sysmocapApp.checkingUpdate || window.sysmocapApp.isLatest) return;
+        window.sysmocapApp.checkingUpdate = true;
 
-window.checkUpdate = () => {
-    if (window.sysmocapApp.checkingUpdate || window.sysmocapApp.isLatest) return;
-    window.sysmocapApp.checkingUpdate = true;
+        // version check options (for details see below)
+        const options = {
+            repo: 'SysMocap',                    // repository name
+            owner: 'xianfei',                               // repository owner
+            currentVersion: 'v' + window.sysmocapApp.appVersion,                       // your app's current version
+        };
+        
+        versionCheck(options, function (error, update) { // callback function
+            window.sysmocapApp.updateError = null
+            if (error) {
+                window.sysmocapApp.updateError = error
+                window.sysmocapApp.checkingUpdate = false
+                return
+            }
+            if (update) { // print some update info if an update is available
+                console.log('An update is available! ' + update.name);
+                window.sysmocapApp.hasUpdate = update
+            } else {
+                window.sysmocapApp.isLatest = true
+            }
 
-    // version check options (for details see below)
-const options = {
-    repo: 'SysMocap',                    // repository name
-    owner: 'xianfei',                               // repository owner
-    currentVersion: 'v' + window.sysmocapApp.appVersion,                       // your app's current version
-  };
-  
-  versionCheck(options, function (error, update) { // callback function
-    window.sysmocapApp.updateError = null
-    if (error) {
-        window.sysmocapApp.updateError = error
-        window.sysmocapApp.checkingUpdate = false
-        return
-    }
-    if (update) { // print some update info if an update is available
-      console.log('An update is available! ' + update.name);
-      window.sysmocapApp.hasUpdate = update
-    } else {
-        window.sysmocapApp.isLatest = true
-    }
+            window.sysmocapApp.checkingUpdate = false
+            // start your app
+            // console.log('Check update finish');
+            //...
+        });
+    };
 
+    window.openInGithub = () =>
+        remote.shell.openExternal("https://github.com/xianfei/SysMocap/releases");
+    window.openInIEEE = () =>
+        remote.shell.openExternal("https://ieeexplore.ieee.org/document/9974484");
 
-  window.sysmocapApp.checkingUpdate = false
-    // start your app
-    // console.log('Check update finish');
-    //...
-  });
-};
-
-window.openInGithub = () =>
-    remote.shell.openExternal("https://github.com/xianfei/SysMocap/releases");
-window.openInIEEE = () =>
-    remote.shell.openExternal("https://ieeexplore.ieee.org/document/9974484");
-
-if(!window.sysmocapApp.disableAutoUpdate) window.checkUpdate()
+    if(!window.sysmocapApp.disableAutoUpdate) window.checkUpdate()
+} else {
+    // Browser mode - use window.open
+    window.openInGithub = () =>
+        window.open("https://github.com/xianfei/SysMocap/releases", "_blank");
+    window.openInIEEE = () =>
+        window.open("https://ieeexplore.ieee.org/document/9974484", "_blank");
+}
 
 window.addEventListener('scroll',function(e){
     if(window.pageYOffset > 10){

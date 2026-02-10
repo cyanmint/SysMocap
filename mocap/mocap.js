@@ -8,11 +8,69 @@
  *  xianfei 2022.3
  */
 
-// import setting utils
-const { globalSettings } = require("../utils/setting.js");
+// Detect if running in browser mode
+const isNwjs = (function() {
+    try {
+        return typeof nw !== 'undefined' && nw.process;
+    } catch (e) {
+        return false;
+    }
+})();
+const isElectron = typeof process !== 'undefined' && process.versions && process.versions.electron && !isNwjs;
+const isBrowserMode = typeof window !== 'undefined' && !isNwjs && !isElectron;
 
-// import mocap web server
-var ipcRenderer = require("electron").ipcRenderer;
+let globalSettings, ipcRenderer;
+
+if (isBrowserMode) {
+    // Browser mode - use browser-compatible settings
+    if (typeof window.settingUtils !== 'undefined') {
+        globalSettings = window.settingUtils.globalSettings;
+    } else {
+        // Fallback settings for browser
+        globalSettings = {
+            forward: {
+                enableForwarding: false,
+                port: "8080",
+                supportForWebXR: "false"
+            }
+        };
+    }
+    
+    // Browser IPC shim
+    ipcRenderer = {
+        send: function(channel, ...args) {
+            window.dispatchEvent(new CustomEvent('ipc-' + channel, { detail: args }));
+        },
+        on: function(channel, callback) {
+            window.addEventListener('ipc-' + channel, (e) => {
+                callback(e, e.detail);
+            });
+        }
+    };
+} else if (isNwjs) {
+    // NW.js mode - import setting utils and use shim
+    const settingUtils = require("../utils/setting.js");
+    globalSettings = settingUtils.globalSettings;
+    
+    // NW.js IPC shim
+    ipcRenderer = {
+        send: function(channel, ...args) {
+            window.dispatchEvent(new CustomEvent('ipc-' + channel, { detail: args }));
+        },
+        on: function(channel, callback) {
+            window.addEventListener('ipc-' + channel, (e) => {
+                callback(e, e.detail);
+            });
+        }
+    };
+} else {
+    // Electron mode - import setting utils
+    const settingUtils = require("../utils/setting.js");
+    globalSettings = settingUtils.globalSettings;
+    
+    // import mocap web server
+    ipcRenderer = require("electron").ipcRenderer;
+}
 
 // Whether mediapipe ready
 var started = false;
