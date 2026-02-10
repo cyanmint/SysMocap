@@ -802,7 +802,8 @@ if (typeof require != "undefined" && !isBrowserMode) {
             }
             
             // Also cleanup on cancel (when input loses focus without selection)
-            input.addEventListener('cancel', cleanup);
+            // Use { once: true } to automatically remove listener after first trigger
+            input.addEventListener('cancel', cleanup, { once: true });
             
             document.body.appendChild(input);
             input.click();
