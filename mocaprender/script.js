@@ -36,7 +36,6 @@ import { VRMLoaderPlugin, VRMUtils } from "@pixiv/three-vrm";
 // set theme
 const orientationClass = globalSettings.output.orientation === 'portrait' ? ' force-portrait' : ' force-landscape';
 const viewportSizeClass = ' viewport-' + (globalSettings.output.viewportSize || 'medium');
-const overlayClass = globalSettings.preview.showSketelonOnInput ? ' skeleton-overlay' : '';
 document.body.setAttribute(
     "class",
     "mdui-theme-layout-auto mdui-theme-primary-" +
@@ -44,8 +43,7 @@ document.body.setAttribute(
         " mdui-theme-accent-" +
         globalSettings.ui.themeColor +
         orientationClass +
-        viewportSizeClass +
-        overlayClass
+        viewportSizeClass
 );
 
 // import mocap web server
