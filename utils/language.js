@@ -127,7 +127,10 @@ const languageData = {
                 halfbody:"半身",
                 init:"初始化动作捕捉引擎...",
                 rec:"正在录制，按R键停止",
-                fullscreen:"全屏"
+                fullscreen:"全屏",
+                toggleCamera:"摄像头输入",
+                togglePreview:"骨骼预览",
+                toggleModel:"模型输出"
             }
         },
         en: {
@@ -258,7 +261,10 @@ const languageData = {
                 halfbody: "Half body",
                 init: "Initializing motion capture engine...",
                 rec: "Recording in progress, press R to stop",
-                fullscreen: "Fullscreen"
+                fullscreen: "Fullscreen",
+                toggleCamera: "Camera Input",
+                togglePreview: "Skeleton Preview",
+                toggleModel: "Model Output"
             }
         },
     },

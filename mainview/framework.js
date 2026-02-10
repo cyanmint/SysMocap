@@ -490,6 +490,18 @@ if (typeof require != "undefined" && !isBrowserMode) {
                     console.log('Model viewer not available in browser mode, selecting model:', model.name);
                     this.selectModel = JSON.stringify(model);
                 }
+            },
+            onViewportSettingsChange() {
+                // Update viewport settings in mocaprender iframe when settings change
+                const iframeWindow = document.getElementById("foo")?.contentWindow;
+                if (iframeWindow && iframeWindow.updateViewportSettings) {
+                    iframeWindow.updateViewportSettings(
+                        this.settings.output.orientation,
+                        this.settings.output.viewportSize
+                    );
+                }
+                // Save settings
+                saveSettings(this.settings);
             }
         },
         watch: {
@@ -1166,6 +1178,18 @@ if (typeof require != "undefined" && !isBrowserMode) {
                     // Browser mode - just select the model (can't open external window)
                     console.log('Model viewer not available in browser mode, selecting model:', model.name);
                     this.selectModel = JSON.stringify(model);
+                },
+                onViewportSettingsChange() {
+                    // Update viewport settings in mocaprender iframe when settings change
+                    const iframeWindow = document.getElementById("foo")?.contentWindow;
+                    if (iframeWindow && iframeWindow.updateViewportSettings) {
+                        iframeWindow.updateViewportSettings(
+                            this.settings.output.orientation,
+                            this.settings.output.viewportSize
+                        );
+                    }
+                    // Save settings
+                    saveSettings(this.settings);
                 }
             },
         });

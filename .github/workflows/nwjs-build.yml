@@ -53,31 +53,55 @@ jobs:
       - name: Build NW.js for ${{ matrix.platform }}
         shell: bash
         run: |
+          set -e  # Exit on error
           mkdir -p ../OutApp/nw
+          
+          # Determine output directory name based on platform
+          if [ "${{ matrix.platform }}" = "osx" ]; then
+            BUILD_DIR="../OutApp/nw/SysMocap-osx-x64"
+          elif [ "${{ matrix.platform }}" = "win" ]; then
+            BUILD_DIR="../OutApp/nw/SysMocap-win-x64"
+          else
+            BUILD_DIR="../OutApp/nw/SysMocap-linux-x64"
+          fi
+          
+          echo "Building for platform: ${{ matrix.platform }}"
+          echo "Output directory: $BUILD_DIR"
+          
           # Build with package.json as source (creates base package)
           # For macOS, add required macOS-specific arguments
           if [ "${{ matrix.platform }}" = "osx" ]; then
-            npx nw-builder --mode=build --version=latest --flavor=normal --arch=x64 --platform=${{ matrix.platform }} --outDir=../OutApp/nw --app.LSApplicationCategoryType="public.app-category.graphics-design" --app.NSHumanReadableCopyright="Copyright © 2024 SysMocap Team" package.json
+            npx nw-builder --mode=build --version=latest --flavor=normal --arch=x64 --platform=${{ matrix.platform }} --outDir="$BUILD_DIR" --app.LSApplicationCategoryType="public.app-category.graphics-design" --app.NSHumanReadableCopyright="Copyright © 2024 SysMocap Team" package.json
           else
-            npx nw-builder --mode=build --version=latest --flavor=normal --arch=x64 --platform=${{ matrix.platform }} --outDir=../OutApp/nw package.json
+            npx nw-builder --mode=build --version=latest --flavor=normal --arch=x64 --platform=${{ matrix.platform }} --outDir="$BUILD_DIR" package.json
           fi
+          
+          echo "NW.js build completed"
+          echo "Checking build output..."
+          ls -la "$BUILD_DIR" || echo "ERROR: BUILD_DIR not found!"
+          ls -la "$BUILD_DIR/package.nw/" || echo "ERROR: package.nw not found!"
+          
           # Copy all necessary files into the package
-          cp -r node_modules ../OutApp/nw/package.nw/
-          cp -r mainview ../OutApp/nw/package.nw/
-          cp -r mocap ../OutApp/nw/package.nw/
-          cp -r mocaprender ../OutApp/nw/package.nw/
-          cp -r render ../OutApp/nw/package.nw/
-          cp -r modelview ../OutApp/nw/package.nw/
-          cp -r utils ../OutApp/nw/package.nw/
-          cp -r models ../OutApp/nw/package.nw/
-          cp -r fonts ../OutApp/nw/package.nw/
-          cp -r icons ../OutApp/nw/package.nw/
-          cp -r pdfs ../OutApp/nw/package.nw/
-          cp -r pdfviewer ../OutApp/nw/package.nw/
-          cp -r webserv ../OutApp/nw/package.nw/ || true
-          cp -r browser ../OutApp/nw/package.nw/ || true
-          cp *.js ../OutApp/nw/package.nw/ || true
-          cp *.html ../OutApp/nw/package.nw/ || true
+          echo "Copying application files..."
+          cp -r node_modules "$BUILD_DIR/package.nw/"
+          cp -r mainview "$BUILD_DIR/package.nw/"
+          cp -r mocap "$BUILD_DIR/package.nw/"
+          cp -r mocaprender "$BUILD_DIR/package.nw/"
+          cp -r render "$BUILD_DIR/package.nw/"
+          cp -r modelview "$BUILD_DIR/package.nw/"
+          cp -r utils "$BUILD_DIR/package.nw/"
+          cp -r models "$BUILD_DIR/package.nw/"
+          cp -r fonts "$BUILD_DIR/package.nw/"
+          cp -r icons "$BUILD_DIR/package.nw/"
+          cp -r pdfs "$BUILD_DIR/package.nw/"
+          cp -r pdfviewer "$BUILD_DIR/package.nw/"
+          cp -r webserv "$BUILD_DIR/package.nw/" || true
+          cp -r browser "$BUILD_DIR/package.nw/" || true
+          cp *.js "$BUILD_DIR/package.nw/" || true
+          
+          echo "Files copied successfully"
+          echo "Final package.nw contents:"
+          ls -la "$BUILD_DIR/package.nw/" | head -20
         
       # step5: get version tag
       - name: Get version tag
@@ -116,6 +140,8 @@ jobs:
             fi
           done
           ls -la *.tar.gz || true
+          cd ${{ github.workspace }}
+          mv ../OutApp .
 
       - name: Create archives (Windows)
         if: runner.os == 'Windows'
@@ -125,6 +151,8 @@ jobs:
             Compress-Archive -Path $_.FullName -DestinationPath "$($_.Name).zip"
           }
           Get-ChildItem *.zip
+          cd ${{ github.workspace }}
+          move OutApp .
 
       # step8: upload desktop artifacts
       - name: Upload NW.js desktop artifacts
@@ -132,8 +160,7 @@ jobs:
         with:
           name: SysMocap-NWjs-${{ matrix.platform }}-${{ steps.get_version.outputs.VERSION }}
           path: |
-            ../OutApp/nw/*.tar.gz
-            ../OutApp/nw/*.zip
+            ${{ github.workspace }}/OutApp
           retention-days: 90
 
   # Build NW.js for Android

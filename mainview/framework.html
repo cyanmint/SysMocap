@@ -727,7 +727,7 @@
                     <label>
                         <span><span class="material-icons-outlined">
                                 screen_rotation </span>{{language.tabSettings.output.orientation}}</span>
-                        <select v-model="settings.output.orientation" class="mdui-select" style="
+                        <select v-model="settings.output.orientation" @change="onViewportSettingsChange" class="mdui-select" style="
                                     float: right;
                                     margin-right: 10px;
                                     padding: 5px 10px;
@@ -741,7 +741,7 @@
                     <label>
                         <span><span class="material-icons-outlined">
                                 aspect_ratio </span>{{language.tabSettings.output.viewportSize}}</span>
-                        <select v-model="settings.output.viewportSize" class="mdui-select" style="
+                        <select v-model="settings.output.viewportSize" @change="onViewportSettingsChange" class="mdui-select" style="
                                     float: right;
                                     margin-right: 10px;
                                     padding: 5px 10px;
