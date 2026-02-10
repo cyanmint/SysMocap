@@ -15,9 +15,11 @@ const languageData = {
                 optAdd: "导入",
                 optHide: "隐藏",
                 dragModel: "把模型拖到这儿来~",
+                clickOrDragModel: "点击或把模型拖到这儿来~",
                 suppotFormat: "支持VRM/GLB/GLTF/FBX，详细说明参见",
                 here: "这里",
                 dragImage: "把图片拖到这儿来~",
+                clickOrDragImage: "点击或把图片拖到这儿来~",
                 open: "打开",
                 setAsDefault: "设为默认",
                 showInFinder: "在 Finder 中显示",
@@ -61,6 +63,14 @@ const languageData = {
                     antialias: "启用抗锯齿",
                     usePicInsteadOfColor: "使用图片作为背景而不是纯色",
                     bgColor: "背景颜色",
+                    orientation: "输出方向",
+                    portrait: "竖屏（3:4）",
+                    landscape: "横屏（16:9）",
+                    viewportSize: "输出画面大小",
+                    viewportSmall: "小 (480p)",
+                    viewportMedium: "中 (720p)",
+                    viewportLarge: "大 (1080p)",
+                    viewportFull: "全屏",
                     bgPicPath: "背景图片（点击更换）",
                 },
                 performance: {
@@ -116,7 +126,8 @@ const languageData = {
                 face:"特写",
                 halfbody:"半身",
                 init:"初始化动作捕捉引擎...",
-                rec:"正在录制，按R键停止"
+                rec:"正在录制，按R键停止",
+                fullscreen:"全屏"
             }
         },
         en: {
@@ -134,9 +145,11 @@ const languageData = {
                 optAdd: "Import",
                 optHide: "Hide",
                 dragModel: "Drag model here",
+                clickOrDragModel: "Click or drag model here",
                 suppotFormat: "Supported VRM/GLB/GLTF/FBX, details see",
                 here: " here",
                 dragImage: "Drag image here",
+                clickOrDragImage: "Click or drag image here",
                 open: "Open",
                 setAsDefault: "Set as default",
                 showInFinder: "Show in Finder",
@@ -189,6 +202,14 @@ const languageData = {
                     usePicInsteadOfColor:
                         "Use Picture as Background instead of Color",
                     bgColor: "Background Color",
+                    orientation: "Output Orientation",
+                    portrait: "Portrait (3:4)",
+                    landscape: "Landscape (16:9)",
+                    viewportSize: "Output Viewport Size",
+                    viewportSmall: "Small (480p)",
+                    viewportMedium: "Medium (720p)",
+                    viewportLarge: "Large (1080p)",
+                    viewportFull: "Full Screen",
                     bgPicPath: "Background Picture (click to change)",
                 },
                 forward: {
@@ -236,7 +257,8 @@ const languageData = {
                 face: "Close-up",
                 halfbody: "Half body",
                 init: "Initializing motion capture engine...",
-                rec: "Recording in progress, press R to stop"
+                rec: "Recording in progress, press R to stop",
+                fullscreen: "Fullscreen"
             }
         },
     },

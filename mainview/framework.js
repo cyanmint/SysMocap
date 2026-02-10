@@ -659,8 +659,8 @@ if (typeof require != "undefined" && !isBrowserMode) {
         // console.log(filePath);
         var strs1 = filePath.split("/");
         var name_ = strs1[strs1.length - 1];
-        var name = name_.substr(0, name_.lastIndexOf("."));
-        var type = name_.substr(name_.lastIndexOf(".") + 1);
+        var name = name_.substring(0, name_.lastIndexOf("."));
+        var type = name_.substring(name_.lastIndexOf(".") + 1);
         if (app.showModelImporter == 1) {
             app.modelImporterName = name;
             app.modelImporterType = type;
@@ -668,6 +668,110 @@ if (typeof require != "undefined" && !isBrowserMode) {
             app.showModelImporter++;
         } else {
             app.modelImporterImg = filePath;
+        }
+    };
+
+    // Handle file selection from file input (click-to-add functionality)
+    // Helper function to extract file name and extension
+    function getFileNameAndExtension(fileName) {
+        const lastDotIndex = fileName.lastIndexOf(".");
+        const name = fileName.substring(0, lastDotIndex);
+        const extension = fileName.substring(lastDotIndex + 1);
+        return { name, extension };
+    }
+    
+    window.handleModelFileSelect = function(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        const { name, extension } = getFileNameAndExtension(file.name);
+        
+        // In browser mode, use the File object directly
+        if (window.isBrowserMode) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                app.modelImporterName = name;
+                app.modelImporterType = extension;
+                app.modelImporterPath = e.target.result; // Use data URL in browser mode
+                app.showModelImporter = 2;
+            };
+            reader.readAsDataURL(file);
+        } else {
+            // In Electron/NW.js mode, use file path
+            const filePath = file.path.replaceAll("\\", "/");
+            
+            app.modelImporterName = name;
+            app.modelImporterType = extension;
+            app.modelImporterPath = filePath;
+            app.showModelImporter = 2;
+        }
+        
+        // Reset file input
+        event.target.value = '';
+    };
+
+    window.handleImageFileSelect = function(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        // In browser mode, use the File object directly
+        if (window.isBrowserMode) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                app.modelImporterImg = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        } else {
+            // In Electron/NW.js mode, use file path
+            const filePath = file.path.replaceAll("\\", "/");
+            app.modelImporterImg = filePath;
+        }
+        
+        // Reset file input
+        event.target.value = '';
+    };
+
+    // Handle click on drag area to trigger file input
+    window.handleDragAreaClick = function() {
+        const isModelInput = app.showModelImporter == 1;
+        const inputId = isModelInput ? 'modelFileInput' : 'imageFileInput';
+        
+        // For NW.js mode, we need to use a different approach
+        if (typeof nw !== 'undefined' && nw.Window) {
+            // NW.js mode - create a new input element each time
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.style.display = 'none';
+            
+            if (isModelInput) {
+                input.accept = '.vrm,.glb,.gltf,.fbx';
+                input.onchange = window.handleModelFileSelect;
+            } else {
+                input.accept = 'image/*';
+                input.onchange = window.handleImageFileSelect;
+            }
+            
+            document.body.appendChild(input);
+            input.click();
+            
+            // Clean up after selection
+            setTimeout(() => {
+                document.body.removeChild(input);
+            }, 1000);
+        } else {
+            // Browser/Electron mode - use existing input
+            const input = document.getElementById(inputId);
+            if (input) {
+                input.click();
+            }
+        }
+    };
+
+    // Handle click on document link with event stop propagation
+    window.handleDocumentLinkClick = function(event) {
+        event.stopPropagation();
+        if (typeof ipcRenderer !== 'undefined') {
+            ipcRenderer.send('openDocument');
         }
     };
 
