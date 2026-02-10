@@ -108,4 +108,4 @@ dist
 .DS_Store
 
 # NW.js builder cache
-cache/
+cache/screenshots/

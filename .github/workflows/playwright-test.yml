@@ -1,0 +1,94 @@
+name: Playwright Mobile Test
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+  workflow_dispatch:
+
+jobs:
+  test-mobile:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Install Playwright browsers
+      run: npx playwright install chromium --with-deps
+    
+    - name: Start server in background
+      run: |
+        node browser-serve.js &
+        echo $! > server.pid
+        sleep 5
+      
+    - name: Wait for server to be ready
+      run: |
+        echo "Waiting for server to start..."
+        for i in {1..30}; do
+          if curl -f http://localhost:3000/browser/ > /dev/null 2>&1; then
+            echo "Server is ready!"
+            exit 0
+          fi
+          echo "Waiting... ($i/30)"
+          sleep 1
+        done
+        echo "Server failed to start"
+        exit 1
+    
+    - name: Run Playwright mobile test
+      run: node tests/playwright-mobile.spec.js
+      
+    - name: Stop server
+      if: always()
+      run: |
+        if [ -f server.pid ]; then
+          kill $(cat server.pid) || true
+        fi
+    
+    - name: Upload screenshots
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: playwright-screenshots
+        path: screenshots/
+        retention-days: 30
+    
+    - name: Add screenshots to job summary
+      if: always()
+      run: |
+        echo "# Playwright Mobile Test Results" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "## Screenshots" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        if [ -f screenshots/mobile-before-start.png ]; then
+          echo "### Before Start" >> $GITHUB_STEP_SUMMARY
+          echo "![Before Start](screenshots/mobile-before-start.png)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if [ -f screenshots/mobile-after-start.png ]; then
+          echo "### After Start" >> $GITHUB_STEP_SUMMARY
+          echo "![After Start](screenshots/mobile-after-start.png)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if [ -f screenshots/mobile-error.png ]; then
+          echo "### Error Screenshot" >> $GITHUB_STEP_SUMMARY
+          echo "![Error](screenshots/mobile-error.png)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        echo "View full test artifacts in the Actions tab." >> $GITHUB_STEP_SUMMARY
