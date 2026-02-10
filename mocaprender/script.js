@@ -786,6 +786,12 @@ if (localStorage.getItem("useCamera") == "camera") {
         .then(function (stream) {
             videoElement.srcObject = stream;
             videoElement.play();
+            
+            // Match viewport to camera dimensions once video is playing
+            videoElement.addEventListener('loadedmetadata', () => {
+                matchViewportToVideo();
+            }, { once: true });
+            
             var videoFrameCallback = async () => {
                 // videoElement.pause()
                 await holistic.send({ image: videoElement });
@@ -808,6 +814,11 @@ if (localStorage.getItem("useCamera") == "camera") {
 
     videoElement.style.transform = "";
     guideCanvas.style.transform = "";
+    
+    // Match viewport to video file dimensions once loaded
+    videoElement.addEventListener('loadedmetadata', () => {
+        matchViewportToVideo();
+    }, { once: true });
 
     var videoFrameCallback = async () => {
         // videoElement.pause()
@@ -824,6 +835,9 @@ var app = new Vue({
     data: {
         target: "face",
         languages: languages[globalSettings.ui.language],
+        showCamera: true,
+        showPreview: true,
+        showModel: true,
     },
 });
 
@@ -851,6 +865,36 @@ function changeTarget(target) {
 }
 
 window.changeTarget = changeTarget;
+
+// Toggle functions for showing/hiding different elements
+function toggleCamera() {
+    app.showCamera = !app.showCamera;
+    const videoElement = document.querySelector('.input_video');
+    if (videoElement) {
+        videoElement.style.display = app.showCamera ? '' : 'none';
+    }
+}
+
+function togglePreview() {
+    app.showPreview = !app.showPreview;
+    const guideCanvas = document.querySelector('.guides');
+    if (guideCanvas) {
+        guideCanvas.style.display = app.showPreview ? '' : 'none';
+    }
+}
+
+function toggleModel() {
+    app.showModel = !app.showModel;
+    const modelElem = document.getElementById('model');
+    if (modelElem) {
+        modelElem.style.display = app.showModel ? '' : 'none';
+    }
+}
+
+// Expose toggle functions to window
+window.toggleCamera = toggleCamera;
+window.togglePreview = togglePreview;
+window.toggleModel = toggleModel;
 
 // Delay for fullscreen transition (in milliseconds)
 const FULLSCREEN_TRANSITION_DELAY = 100;
@@ -892,6 +936,37 @@ function updateViewportSettings(orientation, viewportSize) {
 
 // Expose function to parent window for runtime updates
 window.updateViewportSettings = updateViewportSettings;
+
+// Function to match viewport aspect ratio to camera/video input
+function matchViewportToVideo() {
+    const videoElement = document.querySelector('.input_video');
+    const modelElem = document.getElementById('model');
+    
+    if (!videoElement || !modelElem || !videoElement.videoWidth || !videoElement.videoHeight) {
+        return;
+    }
+    
+    // Get the video's actual dimensions
+    const videoWidth = videoElement.videoWidth;
+    const videoHeight = videoElement.videoHeight;
+    const videoAspect = videoWidth / videoHeight;
+    
+    // Update the model viewport to match video aspect ratio
+    // Remove any forced aspect ratio from settings
+    modelElem.style.aspectRatio = `${videoWidth} / ${videoHeight}`;
+    
+    // Update camera aspect ratio
+    orbitCamera.aspect = videoAspect;
+    orbitCamera.updateProjectionMatrix();
+    
+    // Resize renderer
+    resizeRendererToContainer();
+    
+    console.log(`Matched viewport to video: ${videoWidth}x${videoHeight} (${videoAspect.toFixed(2)})`);
+}
+
+// Expose to window for external calls
+window.matchViewportToVideo = matchViewportToVideo;
 
 // Fullscreen toggle function - only fullscreens the output model, not the camera
 function toggleFullscreen() {
