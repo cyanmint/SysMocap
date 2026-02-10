@@ -202,3 +202,11 @@ body.force-landscape #model {
         top: auto !important;
     }
 }
+
+/* Skeleton overlay mode - overlays skeleton on top of camera view */
+@media (min-width: 769px) {
+    body.skeleton-overlay .preview .guides {
+        left: 50% !important;
+        z-index: 1001;
+    }
+}
