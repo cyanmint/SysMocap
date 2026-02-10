@@ -733,8 +733,38 @@ if (typeof require != "undefined" && !isBrowserMode) {
 
     // Handle click on drag area to trigger file input
     window.handleDragAreaClick = function() {
-        const inputId = app.showModelImporter == 1 ? 'modelFileInput' : 'imageFileInput';
-        document.getElementById(inputId).click();
+        const isModelInput = app.showModelImporter == 1;
+        const inputId = isModelInput ? 'modelFileInput' : 'imageFileInput';
+        
+        // For NW.js mode, we need to use a different approach
+        if (typeof nw !== 'undefined' && nw.Window) {
+            // NW.js mode - create a new input element each time
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.style.display = 'none';
+            
+            if (isModelInput) {
+                input.accept = '.vrm,.glb,.gltf,.fbx';
+                input.onchange = window.handleModelFileSelect;
+            } else {
+                input.accept = 'image/*';
+                input.onchange = window.handleImageFileSelect;
+            }
+            
+            document.body.appendChild(input);
+            input.click();
+            
+            // Clean up after selection
+            setTimeout(() => {
+                document.body.removeChild(input);
+            }, 1000);
+        } else {
+            // Browser/Electron mode - use existing input
+            const input = document.getElementById(inputId);
+            if (input) {
+                input.click();
+            }
+        }
     };
 
     // Handle click on document link with event stop propagation

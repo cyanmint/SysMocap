@@ -567,3 +567,64 @@ button {
 .mdui-slider-discrete .mdui-slider-thumb span {
     top: 0 !important;
 }
+
+/* Mobile responsive layout */
+@media (max-width: 768px) {
+    /* Mocap page controls */
+    #vue-mount > div[v-show="tab=='render'"] > div {
+        width: 100% !important;
+        padding: 0 10px;
+        box-sizing: border-box;
+    }
+    
+    /* Stack mocap controls vertically on mobile */
+    #vue-mount > div[v-show="tab=='render'"] > div > * {
+        display: block !important;
+        width: 100% !important;
+        margin: 10px 0 !important;
+    }
+    
+    #vue-mount > div[v-show="tab=='render'"] > div > select {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    #vue-mount > div[v-show="tab=='render'"] > div > span {
+        display: inline-block !important;
+        margin: 5px 0 !important;
+    }
+    
+    #vue-mount > div[v-show="tab=='render'"] > div > button {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    /* Settings page layout */
+    .model-importer,
+    .model-importer-error {
+        width: calc(100% - 30px) !important;
+        margin-left: 0 !important;
+    }
+    
+    /* Tab bar mobile adjustment */
+    .tab-bar {
+        width: calc(100% - 20px) !important;
+        left: 10px !important;
+    }
+    
+    .tab-bar label {
+        width: calc(33.33% - 4px) !important;
+    }
+    
+    .tab-bar .tab-bar-indicator {
+        width: calc(33.33% - 6px) !important;
+    }
+    
+    .tab-bar input:nth-child(2):checked ~ .tab-bar-buttons .tab-bar-indicator {
+        left: calc(33.33% + 3px) !important;
+    }
+    
+    .tab-bar input:nth-child(3):checked ~ .tab-bar-buttons .tab-bar-indicator {
+        left: calc(66.66% + 3px) !important;
+    }
+}
