@@ -156,8 +156,8 @@ jobs:
         with:
           name: SysMocap-NWjs-${{ matrix.platform }}-${{ steps.get_version.outputs.VERSION }}
           path: |
-            ../OutApp/nw/*.tar.gz
-            ../OutApp/nw/*.zip
+            ${{ github.workspace }}/../OutApp/nw/*.tar.gz
+            ${{ github.workspace }}/../OutApp/nw/*.zip
           retention-days: 90
 
   # Build NW.js for Android
